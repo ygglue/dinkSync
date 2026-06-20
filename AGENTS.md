@@ -153,9 +153,9 @@ dinkSync/
 │       ├── 0000_extensions.sql      ← pg_cron + pgjwt
 │       ├── 0001_init_schema.sql      ← All 12 tables, indexes, triggers
 │       ├── 0002_rls_policies.sql     ← RLS per table + helper functions
-│       ├── 0002b_seed_helpers.sql   ← _seed_user() for dev seeding
 │       ├── 0004_oauth_metadata.sql  ← OAuth-aware handle_new_user
-│       └── 0005_dev_seed_auth.sql   ← bcrypt password for seeded users
+│       ├── 0005_dev_seed_auth.sql   ← _seed_user() + bcrypt password for seeded users
+│       └── 0006_fix_seed_user_pgcrypto.sql ← _seed_user pgcrypto search_path + identities provider_id
 │
 └── docs/
     └── DECISIONS.md            ← ADR-style log (ADR-001 auth, ADR-002 passkeys, ADR-003 hosted Supabase)
@@ -303,6 +303,16 @@ Migration files are plain `.sql` in `supabase/migrations/`, numbered
 alphabetically. The CLI tracks applied migrations in an internal
 `schema_migrations` table.
 
+> ⚠ **Filename gotcha:** a migration file must match `<digits>_name.sql`. A
+> letter suffix like `0002b_seed_helpers.sql` is **silently skipped** by
+> `supabase db push`/`db reset` (you'll see a "Skipping migration ... (file
+> name must match pattern)" line). Use digits-then-underscore only.
+>
+> ⚠ **pgcrypto lives in the `extensions` schema** on Supabase, not `public`.
+> A `security definer` function with a restricted `search_path` must include
+> `extensions` (or schema-qualify) or `crypt`/`gen_salt` resolve to "function
+> does not exist". See `0006_fix_seed_user_pgcrypto.sql`.
+
 **Business logic lives in RPC functions** (plpgsql) called from thin Edge
 Functions, NOT in client Dart code. Edge Functions are ~10-line wrappers:
 parse input → call one RPC with service-role key → return JSON.
@@ -329,7 +339,7 @@ Per `PLAN.md` §9. The next phase adds:
 - **Owner dashboard:** today's revenue, players today, active queue (empty states)
 - **Staff management:** owner adds staff by username/email, grants `can_accept_payment`
 - **Admin view:** list all courts, subscription status
-- **RPC stub:** add `0003_matchmaking_rpc.sql` with a function that returns void (not yet created — current migrations stop at `0002b`)
+- **RPC stub:** add `0003_matchmaking_rpc.sql` with a function that returns void (not yet created — current migrations run 0000–0006; the 0003 slot is reserved for this)
 - **Auth model:** email+password + Google OAuth for sign-in. Email+OTP retained for password reset only. Apple OAuth deferred until an Apple Developer account ($99/yr) is obtained. New migration `0004_oauth_metadata.sql` updates `handle_new_user()` to populate `display_name` / `avatar_url` from OAuth profile data when available.
 - **Router expansion:** add `/owner/*`, `/staff/*`, `/admin/*` routes with role-based guards
 
