@@ -31,3 +31,6 @@ supabase/.temp
 # --- OS / misc ---
 Thumbs.db
 nul
+
+# --- SDD scratch (progress ledger, briefs, reports) ---
+.superpowers/
