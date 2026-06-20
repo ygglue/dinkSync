@@ -155,7 +155,8 @@ dinkSync/
 │       ├── 0002_rls_policies.sql     ← RLS per table + helper functions
 │       ├── 0004_oauth_metadata.sql  ← OAuth-aware handle_new_user
 │       ├── 0005_dev_seed_auth.sql   ← _seed_user() + bcrypt password for seeded users
-│       └── 0006_fix_seed_user_pgcrypto.sql ← _seed_user pgcrypto search_path + identities provider_id
+│       ├── 0006_fix_seed_user_pgcrypto.sql ← _seed_user pgcrypto search_path + identities provider_id
+│       └── 0007_fix_seed_user_auth_tokens.sql ← seeded auth.users token cols = '' (login fix)
 │
 └── docs/
     └── DECISIONS.md            ← ADR-style log (ADR-001 auth, ADR-002 passkeys, ADR-003 hosted Supabase)
@@ -312,6 +313,12 @@ alphabetically. The CLI tracks applied migrations in an internal
 > A `security definer` function with a restricted `search_path` must include
 > `extensions` (or schema-qualify) or `crypt`/`gen_salt` resolve to "function
 > does not exist". See `0006_fix_seed_user_pgcrypto.sql`.
+>
+> ⚠ **Manually-seeded `auth.users` rows must set the token columns to `''`**
+> (`confirmation_token`, `recovery_token`, `email_change`,
+> `email_change_token_new`). GoTrue scans these as non-nullable strings at
+> login; leaving them `NULL` causes "Database error querying schema" on
+> sign-in (not at seed time). See `0007_fix_seed_user_auth_tokens.sql`.
 
 **Business logic lives in RPC functions** (plpgsql) called from thin Edge
 Functions, NOT in client Dart code. Edge Functions are ~10-line wrappers:
