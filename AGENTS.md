@@ -134,23 +134,28 @@ dinkSync/
 │   │   │                               authStateProvider, isSignedInProvider
 │   │   ├── features/
 │   │   │   ├── auth/
-│   │   │   │   ├── auth_repository.dart  ← AuthRepository (sendOtp, verifyOtp, signOut — PLANNED: signIn/SignUpWithPassword, signInWithGoogle)
-│   │   │   │   └── auth_screen.dart      ← Email+OTP two-step UI — PLANNED: Sign In / Sign Up tabs, email+password, "Continue with Google"
+│   │   │   │   ├── auth_repository.dart  ← AuthRepository (signInWithPassword/SignUp, signInWithGoogle, password-reset OTP, signOut)
+│   │   │   │   ├── auth_screen.dart      ← Sign In/Sign Up tabs (email+password), Google, password reset; + debug-only dev login
+│   │   │   │   └── dev_accounts.dart     ← DEV-ONLY seeded identities + dev password (kDebugMode-gated)
 │   │   │   └── profile/
 │   │   │       └── profile_screen.dart   ← Profile CRUD + RLS probe banner
 │   │   └── services/
 │   │       └── payment_service.dart ← PaymentService interface + MockPaymentService
 │   └── test/
-│       └── widget_test.dart       ← Smoke tests (theme builds, AppConfigError)
+│       ├── widget_test.dart       ← Smoke tests (theme builds, AppConfigError)
+│       ├── dev_accounts_test.dart ← Unit tests for dev accounts registry
+│       └── auth_screen_test.dart  ← Widget tests for auth screen
 │
 ├── supabase/                  ← Supabase project (CLI-managed)
 │   ├── config.toml             ← Local stack config (Postgres 17, ports, auth settings)
-│   ├── seed.sql                ← Dev seed: 1 court, 1 owner, 1 staff, 4 players, 2 slots
+│   ├── seed.sql                ← Dev seed: 1 court, owner+staff+admin+4 players, 2 slots
 │   └── migrations/
 │       ├── 0000_extensions.sql      ← pg_cron + pgjwt
 │       ├── 0001_init_schema.sql      ← All 12 tables, indexes, triggers
 │       ├── 0002_rls_policies.sql     ← RLS per table + helper functions
-│       └── 0002b_seed_helpers.sql   ← _seed_user() for dev seeding
+│       ├── 0002b_seed_helpers.sql   ← _seed_user() for dev seeding
+│       ├── 0004_oauth_metadata.sql  ← OAuth-aware handle_new_user
+│       └── 0005_dev_seed_auth.sql   ← bcrypt password for seeded users
 │
 └── docs/
     └── DECISIONS.md            ← ADR-style log (ADR-001 auth, ADR-002 passkeys, ADR-003 hosted Supabase)
