@@ -21,6 +21,7 @@ declare
   p2_id      uuid := 'a2222222-2222-2222-2222-222222222222';
   p3_id      uuid := 'a3333333-3333-3333-3333-333333333333';
   p4_id      uuid := 'a4444444-4444-4444-4444-444444444444';
+  admin_id   uuid := '99999999-9999-9999-9999-999999999999';
   court_id   uuid;
 begin
   -- Helper to create an auth user + profile pair.
@@ -30,6 +31,7 @@ begin
   perform public._seed_user(p2_id,    'p2@dinksync.dev',     'Player Two',  1030, false);
   perform public._seed_user(p3_id,    'p3@dinksync.dev',     'Player Three',  980, false);
   perform public._seed_user(p4_id,    'p4@dinksync.dev',     'Player Four',  1010, false);
+  perform public._seed_user(admin_id, 'admin@dinksync.dev', 'Platform Admin', 1000, true);
 
   -- One active court owned by owner_id.
   insert into public.courts (id, owner_profile_id, name, lat, lng, address,
