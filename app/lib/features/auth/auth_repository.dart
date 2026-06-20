@@ -24,11 +24,13 @@ class AuthRepository {
   }
 
   /// Create a new account. Throws [AuthException] if the email is taken.
-  Future<void> signUpWithPassword({
+  /// Returns the [AuthResponse] so callers can detect a null session (email
+  /// confirmation required).
+  Future<AuthResponse> signUpWithPassword({
     required String email,
     required String password,
-  }) async {
-    await _client.auth.signUp(
+  }) {
+    return _client.auth.signUp(
       email: email.trim(),
       password: password,
     );

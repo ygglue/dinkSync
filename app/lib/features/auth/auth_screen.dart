@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException, AuthResponse;
 
 import 'auth_repository.dart';
 import 'dev_accounts.dart';
@@ -64,20 +64,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             password: _passwordCtl.text,
           );
         } else {
-          await _repo.signUpWithPassword(
+          final AuthResponse res = await _repo.signUpWithPassword(
             email: _emailCtl.text,
             password: _passwordCtl.text,
           );
+          if (res.session == null && mounted) {
+            setState(() => _notice =
+                'Account created. Check your email to confirm, then sign in.');
+          }
         }
       });
 
   Future<void> _google() => _run(() => _repo.signInWithGoogle());
 
-  Future<void> _devLogin(DevAccount account) =>
-      _run(() => _repo.signInWithPassword(
-            email: account.email,
-            password: kDevPassword,
-          ));
+  Future<void> _devLogin(DevAccount account) {
+    assert(kDebugMode);
+    if (!kDebugMode) return Future.value();
+    return _run(() => _repo.signInWithPassword(
+          email: account.email,
+          password: kDevPassword,
+        ));
+  }
 
   Future<void> _openResetFlow() async {
     final sent = await showModalBottomSheet<bool>(
