@@ -80,12 +80,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           ));
 
   Future<void> _openResetFlow() async {
-    await showModalBottomSheet<void>(
+    final sent = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       builder: (_) => _PasswordResetSheet(repo: _repo),
     );
-    if (mounted) {
+    if (mounted && sent == true) {
       setState(() => _notice = 'If the email exists, a reset code was sent.');
     }
   }
@@ -312,7 +312,7 @@ class _PasswordResetSheetState extends State<_PasswordResetSheet> {
           token: _codeCtl.text,
         );
         await widget.repo.updatePassword(_newPwCtl.text);
-      }, onSuccess: () => Navigator.of(context).pop());
+      }, onSuccess: () => Navigator.of(context).pop(true));
 
   @override
   Widget build(BuildContext context) {
