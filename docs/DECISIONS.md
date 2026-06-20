@@ -93,3 +93,28 @@ a local Docker stack. Migrations are applied via the Supabase CLI
 - **CLI config:** The `config.toml` had a deprecated key
   (`refresh_token_rotation_enabled`) renamed in CLI v2.107.0 to
   `enable_refresh_token_rotation`. Fixed with a one-line rename.
+
+---
+
+## ADR-004: Debug-Only Dev Login
+**Date:** 2026-06-21
+**Status:** Accepted
+
+### Context
+Iterating on role-specific features (player, owner, staff, admin) requires
+repeatedly signing in as each role. Real auth (email+password / Google) adds
+friction to that loop.
+
+### Decision
+**Add a one-tap dev login, gated behind `kDebugMode`.** Seeded users
+(`*@dinksync.dev`) are given a shared bcrypt password (`dinkdev123`) in
+`0005_dev_seed_auth.sql`; a debug-only panel calls `signInWithPassword` with
+that password. The panel and the password constant are tree-shaken out of
+release builds by the `if (kDebugMode)` guard.
+
+### Consequences
+- **Positive:** Instant role switching in dev. Uses the real password auth path.
+- **Negative:** A shared dev password lives in the seed + a Dart constant.
+  Acceptable: seeded accounts only exist in dev DBs (`seed.sql` never auto-runs
+  on `db push`), and the constant is compiled out of release builds.
+- **Guardrail:** never run `seed.sql` against a production project.

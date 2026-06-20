@@ -53,6 +53,11 @@ cd supabase
 supabase login
 supabase link --project-ref <your-project-ref>
 supabase db push            # applies all migrations in order
+#     Apply dev seed (db push does NOT run seed.sql):
+#       paste supabase/seed.sql into the dashboard SQL editor, or
+#       psql "<dev db connection string>" -f supabase/seed.sql
+#     This creates 7 dev users (owner, staff, admin, p1-p4), all with the
+#     dev password 'dinkdev123', enabling the debug-only dev-login buttons.
 
 # 2b. Local Supabase (ALTERNATIVE — requires Docker Desktop)
 #     cd supabase
@@ -299,11 +304,13 @@ parse input → call one RPC with service-role key → return JSON.
 
 ---
 
-## 8. What's Built (Phase 0 — auth rewrite still pending)
+## 8. What's Built (Phase 0)
 
 - [x] Supabase schema (12 tables) + RLS + extensions
 - [x] Dev seed data (1 court, 6 users, 2 slots)
-- [x] Flutter app: auth (email+OTP — current; rewrite to email+password + Google OAuth is the next task, see §9 and ADR-001), profile (CRUD + RLS probe), theme, router
+- [x] Flutter app: auth (email+password + Google OAuth web, OTP retained for
+  password reset; debug-only dev login for 5 seeded roles), profile (CRUD + RLS
+  probe), theme, router
 - [x] `PaymentService` interface + `MockPaymentService`
 - [x] `flutter analyze` clean, `flutter test` passing (3/3)
 
@@ -318,7 +325,7 @@ Per `PLAN.md` §9. The next phase adds:
 - **Staff management:** owner adds staff by username/email, grants `can_accept_payment`
 - **Admin view:** list all courts, subscription status
 - **RPC stub:** add `0003_matchmaking_rpc.sql` with a function that returns void (not yet created — current migrations stop at `0002b`)
-- **Auth model finalized:** email+password + Google OAuth for sign-in. Email+OTP retained for password reset only. Apple OAuth deferred until an Apple Developer account ($99/yr) is obtained. New migration `0004_oauth_metadata.sql` updates `handle_new_user()` to populate `display_name` / `avatar_url` from OAuth profile data when available.
+- **Auth model:** email+password + Google OAuth for sign-in. Email+OTP retained for password reset only. Apple OAuth deferred until an Apple Developer account ($99/yr) is obtained. New migration `0004_oauth_metadata.sql` updates `handle_new_user()` to populate `display_name` / `avatar_url` from OAuth profile data when available.
 - **Router expansion:** add `/owner/*`, `/staff/*`, `/admin/*` routes with role-based guards
 
 Read `PLAN.md` sections 4, 8, and 9 for the full Phase 1 spec before starting.
@@ -337,9 +344,7 @@ These are deferred choices that don't block Phase 1 but will matter later:
    for Phase 3)
 6. **Auth model** — Email+password + Google OAuth for sign-in. OTP retained for
    password reset only. Apple OAuth deferred until Apple Developer account is
-   obtained. **See [ADR-001](docs/DECISIONS.md#adr-001-auth-model).** The
-   `auth_repository.dart` / `auth_screen.dart` rewrite is a Phase 0 extension
-   before Phase 1 starts.
+   obtained. **See [ADR-001](docs/DECISIONS.md#adr-001-auth-model).**
 
 ---
 
