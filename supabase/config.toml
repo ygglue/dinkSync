@@ -1,0 +1,69 @@
+# Supabase CLI project config for dinkSync.
+# Docs: https://supabase.com/docs/guides/local-development/cli/config
+#
+# Local dev:
+#   supabase init          (already run — created this file)
+#   supabase start         (starts local stack: Postgres, Auth, Realtime, ...)
+#   supabase db reset      (re-runs all migrations + seed.sql)
+#   supabase db push       (pushes local migrations to linked remote)
+#
+# Linking a hosted project:
+#   supabase link --project-ref <your-project-ref>
+
+project_id = "dinksync"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false   # set true to require email confirmation before login
+
+[auth.external.apple]
+enabled = false
+[auth.external.google]
+enabled = false
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+
+# Inbucket catches outbound mail locally so you can read OTP emails during dev.
+[inbucket]
+enabled = true
+port = 54324
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"

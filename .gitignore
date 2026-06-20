@@ -1,0 +1,33 @@
+# --- Secrets / env ---
+.env
+app/.env
+*.local
+
+# --- Flutter / Dart ---
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/build/
+app/.pub-cache/
+app/.pub/
+app/pubspec.lock
+**/generated_plugin_registrant.dart
+flutter_*.log
+**/flutter_*.log
+
+# --- IDE ---
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# --- Supabase local ---
+supabase/.branches
+supabase/.temp
+
+# --- OS / misc ---
+Thumbs.db
+nul
