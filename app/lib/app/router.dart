@@ -9,6 +9,7 @@ import '../data/app_mode.dart';
 import '../data/supabase_client.dart';
 import '../features/auth/auth_screen.dart';
 import '../features/owner/court_repository.dart';
+import '../features/owner/court_edit_screen.dart';
 import '../features/owner/management_screen.dart';
 import '../features/owner/subscription_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -40,6 +41,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/manage/subscribe',
         builder: (c, s) => _SubscribeRoute(),
+      ),
+      GoRoute(
+        path: '/manage/edit',
+        builder: (c, s) => _EditRoute(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (c, s, navShell) => PlayShell(navigationShell: navShell),
@@ -84,7 +89,7 @@ class _SubscribeRoute extends ConsumerWidget {
     return courtAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (_, _) =>
+      error: (e, s) =>
           const Scaffold(body: Center(child: Text('Could not load court.'))),
       data: (court) {
         if (court == null) {
@@ -97,6 +102,36 @@ class _SubscribeRoute extends ConsumerWidget {
         return SubscriptionScreen(
           courtId: court.id,
           onSubscribed: () {
+            ref.invalidate(ownerCourtProvider);
+            context.go('/manage');
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Resolves the owner's current court, then shows the edit screen.
+class _EditRoute extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final courtAsync = ref.watch(ownerCourtProvider);
+    return courtAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) =>
+          const Scaffold(body: Center(child: Text('Could not load court.'))),
+      data: (court) {
+        if (court == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/manage');
+          });
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        }
+        return CourtEditScreen(
+          court: court,
+          onSaved: () {
             ref.invalidate(ownerCourtProvider);
             context.go('/manage');
           },

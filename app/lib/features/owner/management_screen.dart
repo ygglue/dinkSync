@@ -49,10 +49,15 @@ class ManagementScreen extends ConsumerWidget {
             // Allow jumping straight to subscribe from a suspended court.
             return OwnerDashboard(
               court: court,
+              onEdit: () => context.go('/manage/edit'),
               onSubscribe: () => context.go('/manage/subscribe'),
             );
           }
-          return OwnerDashboard(court: court, onSubscribe: () {});
+          return OwnerDashboard(
+            court: court,
+            onEdit: () => context.go('/manage/edit'),
+            onSubscribe: () {},
+          );
         },
       ),
     );

@@ -10,10 +10,12 @@ class OwnerDashboard extends StatelessWidget {
     super.key,
     required this.court,
     required this.onSubscribe,
+    this.onEdit,
   });
 
   final Court court;
   final VoidCallback onSubscribe;
+  final VoidCallback? onEdit;
 
   String get _fee => '₱${(court.entryFeeCents / 100).toStringAsFixed(0)}';
 
@@ -24,7 +26,20 @@ class OwnerDashboard extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(court.name, style: theme.textTheme.headlineSmall),
+        Row(
+          children: [
+            Expanded(
+              child: Text(court.name, style: theme.textTheme.headlineSmall),
+            ),
+            if (onEdit != null)
+              IconButton(
+                key: const Key('edit-court-button'),
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit court',
+              ),
+          ],
+        ),
         const SizedBox(height: 4),
         Text(
           'Entry fee $_fee · ${court.numCourts} '
