@@ -2050,6 +2050,393 @@ git commit -m "feat(shell): wire two-shell router, launch decider, management sc
 
 ---
 
+### Task 10: Edit-court screen
+
+**Files:**
+- Create: `app/lib/features/owner/court_edit_screen.dart`
+- Modify: `app/lib/features/owner/owner_dashboard_screen.dart` (add optional `onEdit` + edit button)
+- Modify: `app/lib/features/owner/management_screen.dart` (pass `onEdit`)
+- Modify: `app/lib/app/router.dart` (add `/manage/edit` route)
+- Test: `app/test/court_edit_screen_test.dart`
+
+**Interfaces:**
+- Consumes: `Court`, `courtRepositoryProvider.updateCourt`, `parseAmountToMinor` (Task 4); `ownerCourtProvider` (Task 4).
+- Produces: `class CourtEditScreen extends ConsumerStatefulWidget { final Court court; final void Function() onSaved; }`. `OwnerDashboard` gains an optional `final VoidCallback? onEdit;` (an edit button shows only when non-null — keeps Task 7's test valid).
+
+- [ ] **Step 1: Write the failing test**
+
+Create `app/test/court_edit_screen_test.dart`:
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:dinksync/features/owner/court_edit_screen.dart';
+import 'package:dinksync/features/owner/court_repository.dart';
+import 'package:dinksync/features/owner/owner_dashboard_screen.dart';
+
+const _court = Court(
+  id: 'c1',
+  name: 'Cebu Dinks',
+  status: 'active',
+  entryFeeCents: 5000,
+  currency: 'PHP',
+  numCourts: 3,
+  address: 'Cebu City',
+);
+
+class _FakeRepo implements CourtRepository {
+  int updateCalls = 0;
+  Map<String, Object?>? lastArgs;
+
+  @override
+  Future<void> updateCourt({
+    required String courtId,
+    required String name,
+    required int entryFeeCents,
+    String? address,
+  }) async {
+    updateCalls++;
+    lastArgs = {'courtId': courtId, 'name': name, 'entryFeeCents': entryFeeCents};
+  }
+
+  @override
+  Future<Court?> myCourt() async => null;
+  @override
+  Future<String> createCourt(
+          {required String name,
+          required int entryFeeCents,
+          required String currency,
+          required int numCourts,
+          String? address}) async =>
+      'x';
+  @override
+  Future<void> subscribeCourt(
+      {required String courtId, required SubscriptionPlan plan}) async {}
+}
+
+Widget _editHost(_FakeRepo repo, {void Function()? onSaved}) => ProviderScope(
+      overrides: [courtRepositoryProvider.overrideWithValue(repo)],
+      child: MaterialApp(
+        home: CourtEditScreen(court: _court, onSaved: onSaved ?? () {}),
+      ),
+    );
+
+void main() {
+  testWidgets('prefills, saves changes, calls onSaved', (tester) async {
+    final repo = _FakeRepo();
+    var saved = false;
+    await tester.pumpWidget(_editHost(repo, onSaved: () => saved = true));
+
+    expect(find.text('Cebu Dinks'), findsOneWidget); // prefilled name
+
+    await tester.enterText(
+        find.bySemanticsLabel('Court name'), 'Cebu Dinks 2');
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    expect(repo.updateCalls, 1);
+    expect(repo.lastArgs!['courtId'], 'c1');
+    expect(repo.lastArgs!['name'], 'Cebu Dinks 2');
+    expect(repo.lastArgs!['entryFeeCents'], 5000);
+    expect(saved, true);
+  });
+
+  testWidgets('blank name blocks save', (tester) async {
+    final repo = _FakeRepo();
+    await tester.pumpWidget(_editHost(repo));
+
+    await tester.enterText(find.bySemanticsLabel('Court name'), '');
+    await tester.tap(find.text('Save changes'));
+    await tester.pump();
+
+    expect(repo.updateCalls, 0);
+    expect(find.text('Court name is required'), findsOneWidget);
+  });
+
+  testWidgets('dashboard shows edit button only when onEdit provided',
+      (tester) async {
+    var tapped = false;
+    await tester.pumpWidget(MaterialApp(
+      home: OwnerDashboard(
+        court: _court,
+        onSubscribe: () {},
+        onEdit: () => tapped = true,
+      ),
+    ));
+
+    final editBtn = find.byKey(const Key('edit-court-button'));
+    expect(editBtn, findsOneWidget);
+    await tester.tap(editBtn);
+    await tester.pump();
+    expect(tapped, true);
+  });
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `/c/Users/Eli/flutter/bin/flutter test test/court_edit_screen_test.dart`
+Expected: FAIL — `court_edit_screen.dart` not found / `onEdit` not a parameter.
+
+- [ ] **Step 3: Implement the edit screen**
+
+Create `app/lib/features/owner/court_edit_screen.dart`:
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'court_repository.dart';
+
+/// Edit a court's name, entry fee, and address (not slot count — that touches
+/// court_slots). Uses the direct `updateCourt` path (allowed by courts_update_owner).
+class CourtEditScreen extends ConsumerStatefulWidget {
+  const CourtEditScreen({super.key, required this.court, required this.onSaved});
+
+  final Court court;
+  final void Function() onSaved;
+
+  @override
+  ConsumerState<CourtEditScreen> createState() => _CourtEditScreenState();
+}
+
+class _CourtEditScreenState extends ConsumerState<CourtEditScreen> {
+  late final TextEditingController _nameCtl =
+      TextEditingController(text: widget.court.name);
+  late final TextEditingController _feeCtl = TextEditingController(
+      text: (widget.court.entryFeeCents / 100).toStringAsFixed(0));
+  late final TextEditingController _addressCtl =
+      TextEditingController(text: widget.court.address ?? '');
+
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _nameCtl.dispose();
+    _feeCtl.dispose();
+    _addressCtl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final name = _nameCtl.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'Court name is required');
+      return;
+    }
+    final fee = parseAmountToMinor(_feeCtl.text) ?? 0;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(courtRepositoryProvider).updateCourt(
+            courtId: widget.court.id,
+            name: name,
+            entryFeeCents: fee,
+            address: _addressCtl.text.trim().isEmpty
+                ? null
+                : _addressCtl.text.trim(),
+          );
+      if (mounted) widget.onSaved();
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Could not save. Try again.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Edit court')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _nameCtl,
+              enabled: !_busy,
+              decoration: const InputDecoration(
+                labelText: 'Court name',
+                prefixIcon: Icon(Icons.stadium_outlined),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _feeCtl,
+              enabled: !_busy,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Entry fee (PHP)',
+                prefixIcon: Icon(Icons.payments_outlined),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _addressCtl,
+              enabled: !_busy,
+              decoration: const InputDecoration(
+                labelText: 'Address (optional)',
+                prefixIcon: Icon(Icons.location_on_outlined),
+              ),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: theme.colorScheme.error)),
+            ],
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _busy ? null : _save,
+              child: _busy
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Save changes'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+- [ ] **Step 4: Add the optional edit button to `OwnerDashboard`**
+
+In `app/lib/features/owner/owner_dashboard_screen.dart`, add the field to the constructor — change:
+```dart
+  const OwnerDashboard({
+    super.key,
+    required this.court,
+    required this.onSubscribe,
+  });
+
+  final Court court;
+  final VoidCallback onSubscribe;
+```
+to:
+```dart
+  const OwnerDashboard({
+    super.key,
+    required this.court,
+    required this.onSubscribe,
+    this.onEdit,
+  });
+
+  final Court court;
+  final VoidCallback onSubscribe;
+  final VoidCallback? onEdit;
+```
+Then replace the header line:
+```dart
+        Text(court.name, style: theme.textTheme.headlineSmall),
+```
+with:
+```dart
+        Row(
+          children: [
+            Expanded(
+              child: Text(court.name, style: theme.textTheme.headlineSmall),
+            ),
+            if (onEdit != null)
+              IconButton(
+                key: const Key('edit-court-button'),
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit court',
+              ),
+          ],
+        ),
+```
+
+- [ ] **Step 5: Wire the route + management screen**
+
+In `app/lib/app/router.dart`, add an import:
+```dart
+import '../features/owner/court_edit_screen.dart';
+```
+Add a route after the `/manage/subscribe` `GoRoute`:
+```dart
+      GoRoute(
+        path: '/manage/edit',
+        builder: (c, s) => _EditRoute(),
+      ),
+```
+Add this widget next to `_SubscribeRoute` (same file):
+```dart
+/// Resolves the owner's current court, then shows the edit screen.
+class _EditRoute extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final courtAsync = ref.watch(ownerCourtProvider);
+    return courtAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, __) =>
+          const Scaffold(body: Center(child: Text('Could not load court.'))),
+      data: (court) {
+        if (court == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/manage');
+          });
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        }
+        return CourtEditScreen(
+          court: court,
+          onSaved: () {
+            ref.invalidate(ownerCourtProvider);
+            context.go('/manage');
+          },
+        );
+      },
+    );
+  }
+}
+```
+In `app/lib/features/owner/management_screen.dart`, pass `onEdit` on both `OwnerDashboard` usages — change each `return OwnerDashboard(court: court, onSubscribe: ...)` to include `onEdit: () => context.go('/manage/edit'),`. For the active branch:
+```dart
+          return OwnerDashboard(
+            court: court,
+            onEdit: () => context.go('/manage/edit'),
+            onSubscribe: () {},
+          );
+```
+and for the suspended branch:
+```dart
+            return OwnerDashboard(
+              court: court,
+              onEdit: () => context.go('/manage/edit'),
+              onSubscribe: () => context.go('/manage/subscribe'),
+            );
+```
+
+- [ ] **Step 6: Run the test to verify it passes**
+
+Run: `/c/Users/Eli/flutter/bin/flutter test test/court_edit_screen_test.dart`
+Expected: PASS (3 tests).
+
+- [ ] **Step 7: Analyze + full suite**
+
+Run: `/c/Users/Eli/flutter/bin/flutter analyze && /c/Users/Eli/flutter/bin/flutter test`
+Expected: analyze clean; all tests pass.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add lib/features/owner/court_edit_screen.dart lib/features/owner/owner_dashboard_screen.dart lib/features/owner/management_screen.dart lib/app/router.dart test/court_edit_screen_test.dart
+git commit -m "feat(owner): edit-court screen (name/fee/address)"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage:**
@@ -2060,12 +2447,10 @@ git commit -m "feat(shell): wire two-shell router, launch decider, management sc
 - Subscription (monthly/yearly, mock pay) → Task 6. ✓
 - Dashboard (empty states, suspended banner) → Task 7. ✓
 - `create_court` + `subscribe_court` RPCs + visibility policy → Task 1. ✓
-- Edit-court action → **deferred within this plan** (spec marks it "light/secondary"); `updateCourt` exists in the repository (Task 4) but no UI is wired. If the edit UI is wanted in this slice, add a follow-up task; otherwise it lands with the next owner slice. (Flagged so it isn't silently dropped.)
+- Edit-court action → Task 10 (edit screen + dashboard button + `/manage/edit` route). ✓
 - Tests (mode persistence, capabilities, onboarding, subscription, dashboard, launch) → Tasks 2,3,5,6,7,9. ✓
 - `shared_preferences` dependency → Task 2. ✓
 
 **Placeholder scan:** No TBD/TODO; every code step has complete code. The one forward-reference (`capabilitiesProviderRefresh`) is explicitly corrected in Task 9 Step 5.
 
-**Type consistency:** `CourtRepository` method signatures match across Tasks 4–9; `Court`/`SubscriptionPlan`/`AppMode`/`Capabilities` names consistent; `launchTarget`, `ownerCourtProvider`, `courtRepositoryProvider`, `appModeProvider`, `capabilitiesProvider` used consistently.
-
-> **Note on edit-court:** the spec lists a *minimal* edit action. This plan ships the repository method (`updateCourt`) but not its UI, to keep the slice focused on shell + create + subscribe + dashboard. Confirm whether to add an edit-court UI task before execution.
+**Type consistency:** `CourtRepository` method signatures match across Tasks 4–10; `Court`/`SubscriptionPlan`/`AppMode`/`Capabilities` names consistent; `launchTarget`, `ownerCourtProvider`, `courtRepositoryProvider`, `appModeProvider`, `capabilitiesProvider` used consistently. `OwnerDashboard.onEdit` is optional, so Task 7's test (no `onEdit`) stays valid while Task 10 adds the button.
