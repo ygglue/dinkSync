@@ -20,7 +20,8 @@ defers staff management, the platform-admin view, and the player core loop.
 - Role/capability detection + a persisted Play/Management mode switcher.
 - Two navigation shells (Play with bottom nav; Management) wired in `go_router`.
 - Owner court onboarding (create venue) → subscription (mock) → dashboard.
-- `0008` migration: `create_court` + `subscribe_court` RPCs.
+- `0008` migration: `create_court` + `subscribe_court` RPCs + tightened `courts`
+  visibility (only subscribed/`active` courts are publicly discoverable).
 - Empty-state management dashboard + minimal edit-court.
 - Tests consistent with the repo (pure-logic/widget; no live Supabase).
 
@@ -95,17 +96,24 @@ Submit → `create_court` RPC → on success, route to the Subscription page for
 new court. Styled per the `dinksync-ui` skill (24px rounded, kBrandGreen CTA,
 tonal inputs). Busy state disables the form; failures show inline error.
 
+Onboarding is a **two-step gate**: creating the court (status `suspended`) does
+**not** publish it. The court is **hidden from discovery until an active
+subscription exists** (see 5.2 and §6). If the owner abandons before subscribing,
+the court stays `suspended`/hidden and they resume from the dashboard banner.
+
 ### 5.2 Subscription (`features/owner/subscription_screen.dart`)
 - Two plans: **Monthly** and **Yearly**, in **PHP**, with startup-friendly
   placeholder prices: `monthly = 99900` centavos (₱999.00) and
   `yearly = 999000` centavos (₱9,990.00, ~2 months free) — adjustable.
 - "Subscribe" → `MockPaymentService` (auto-succeeds) → `subscribe_court` RPC →
-  court becomes `active` → dashboard.
+  court becomes `active` → **now discoverable** → dashboard.
 - Reachable from a `suspended` dashboard banner (reactivation uses the same page).
+- This step is what publishes the court; without it the venue is invisible to players.
 
 ### 5.3 Management dashboard (`features/owner/owner_dashboard_screen.dart`)
 - Header: court name + status chip; entry-fee and #-slots summary.
-- If `suspended`: prominent "Subscription inactive — Subscribe" banner → 5.2.
+- If `suspended`: prominent "Subscription inactive — your court is hidden from
+  players. Subscribe to publish it" banner → 5.2.
 - Three **empty-state** metric cards: **Today's revenue**, **Players today**,
   **Active queue** (real data lands with the player loop; for now they render
   zero/empty states and tolerate restricted/empty reads).
@@ -123,11 +131,11 @@ tonal inputs). Busy state disables the form; failures show inline error.
   `supabase.rpc('subscribe_court', …)`; invalidates `ownerCourtProvider`.
 - `updateCourt(...)` → direct `courts` update for the edit action.
 
-## 6. Database changes — migration `0008_owner_court_rpcs.sql`
+## 6. Database changes — migration `0008_owner_court_setup.sql`
 
 Two `plpgsql security definer` functions (set `search_path` explicitly, verify
-`auth.uid()` inside — same pattern as existing helpers/seed). `0003` remains
-reserved for matchmaking.
+`auth.uid()` inside — same pattern as existing helpers/seed) **plus a tightened
+`courts` visibility policy**. `0003` remains reserved for matchmaking.
 
 **`create_court(p_name text, p_entry_fee_cents int, p_currency text, p_num_courts int, p_address text)`**
 - Asserts `auth.uid()` is not null.
@@ -156,6 +164,23 @@ Placeholder prices (`monthly = 99900`, `yearly = 999000` centavos = ₱999 / ₱
 currency `PHP`) live in the RPC and are adjustable later. The client sends only
 the chosen plan.
 
+**Tighten `courts` visibility (replace `courts_select`)** — a court must have an
+active subscription (i.e. `status = 'active'`) to be discoverable:
+
+```sql
+drop policy "courts_select" on public.courts;
+create policy "courts_select" on public.courts for select
+  using (
+    status = 'active'                 -- public sees only published courts
+    or public.is_court_member(id)     -- owner/staff see their own (any status)
+    or public.is_platform_admin()     -- admin sees all
+  );
+```
+
+This enforces "subscribed ⇒ visible" at the database, before the player
+discovery screen exists. `ownerCourtProvider` still works because the owner is a
+`court_member` of their own (even `suspended`) court.
+
 ## 7. Error handling & edge cases
 
 - Onboarding submit: spinner + disabled form while busy; RPC failure → inline
@@ -181,7 +206,9 @@ the chosen plan.
 - Dashboard widget — renders empty-state cards; shows the suspended banner when
   `status == 'suspended'`.
 - `create_court` / `subscribe_court` param-building unit tests.
-- Live RPC round-trips verified manually (consistent with current approach).
+- Live RPC round-trips verified manually (consistent with current approach),
+  including the visibility rule: a `suspended` court is hidden from a
+  non-member, visible to its owner, and becomes visible after `subscribe_court`.
 
 ## 9. Dependencies & file layout
 
@@ -204,7 +231,7 @@ app/lib/
       subscription_screen.dart            (new)
       owner_dashboard_screen.dart         (new)
     profile/profile_screen.dart           (edit: "Own a court? Set it up" entry)
-supabase/migrations/0008_owner_court_rpcs.sql   (new)
+supabase/migrations/0008_owner_court_setup.sql  (new: RPCs + courts visibility policy)
 app/test/…                                (new tests per §8)
 ```
 
