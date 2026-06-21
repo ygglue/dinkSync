@@ -24,17 +24,17 @@ Future<void> main() async {
   );
 }
 
-class DinkSyncApp extends StatelessWidget {
+class DinkSyncApp extends ConsumerWidget {
   const DinkSyncApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       title: 'dinkSync',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      routerConfig: buildRouter(),
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }
