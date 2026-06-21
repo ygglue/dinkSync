@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException, AuthResponse;
 
+import '../../app/theme.dart';
 import 'auth_repository.dart';
 import 'dev_accounts.dart';
 
@@ -106,37 +107,52 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
+            constraints: const BoxConstraints(maxWidth: 400),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.sports_tennis,
-                    size: 56, color: theme.colorScheme.primary),
-                const SizedBox(height: 12),
+                // Brand logo — paddle in a soft green-tinted tile.
+                Center(
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(kRadius),
+                    ),
+                    child: Icon(Icons.sports_tennis,
+                        size: 34, color: theme.colorScheme.primary),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Text(
                   'dinkSync',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
+                Text(
+                  'Elevate your pickleball game.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 28),
 
-                SegmentedButton<_Mode>(
-                  segments: const [
-                    ButtonSegment(value: _Mode.signIn, label: Text('Sign In')),
-                    ButtonSegment(value: _Mode.signUp, label: Text('Sign Up')),
-                  ],
-                  selected: {_mode},
-                  onSelectionChanged: _busy
-                      ? null
-                      : (s) => setState(() {
-                            _mode = s.first;
-                            _error = null;
-                            _notice = null;
-                          }),
+                _PillToggle(
+                  mode: _mode,
+                  busy: _busy,
+                  onChanged: (m) => setState(() {
+                    _mode = m;
+                    _error = null;
+                    _notice = null;
+                  }),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 TextField(
                   controller: _emailCtl,
@@ -144,11 +160,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const ['email'],
                   decoration: const InputDecoration(
-                    labelText: 'Email',
+                    labelText: 'Email address',
                     prefixIcon: Icon(Icons.mail_outline),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
                 TextField(
                   controller: _passwordCtl,
@@ -174,7 +190,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   )
                 else
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
                 if (_error != null) ...[
                   const SizedBox(height: 4),
@@ -197,12 +213,24 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : Text(isSignIn ? 'Sign in' : 'Create account'),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
+
+                const _OrDivider(),
+                const SizedBox(height: 16),
 
                 OutlinedButton.icon(
                   onPressed: _busy ? null : _google,
-                  icon: const Icon(Icons.login),
+                  icon: const _GoogleLogo(),
                   label: const Text('Continue with Google'),
+                ),
+
+                const SizedBox(height: 20),
+                Text(
+                  'By continuing, you agree to dinkSync’s '
+                  'Terms of Service and Privacy Policy.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.outline),
                 ),
 
                 if (kDebugMode) _DevLoginPanel(busy: _busy, onPick: _devLogin),
@@ -210,6 +238,113 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Pill-style Sign In / Sign Up toggle. The selected segment is a filled
+/// green pill on a neutral track.
+class _PillToggle extends StatelessWidget {
+  const _PillToggle({
+    required this.mode,
+    required this.busy,
+    required this.onChanged,
+  });
+
+  final _Mode mode;
+  final bool busy;
+  final ValueChanged<_Mode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    Widget seg(String label, _Mode value) {
+      final selected = mode == value;
+      return Expanded(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: busy ? null : () => onChanged(value),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: selected ? kBrandGreen : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: selected
+                    ? Colors.white
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        children: [
+          seg('Sign In', _Mode.signIn),
+          seg('Sign Up', _Mode.signUp),
+        ],
+      ),
+    );
+  }
+}
+
+/// A centered "or" between two hairline rules.
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.outlineVariant;
+    return Row(
+      children: [
+        Expanded(child: Divider(color: color)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            'OR',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ),
+        Expanded(child: Divider(color: color)),
+      ],
+    );
+  }
+}
+
+/// Minimal Google "G" mark for the OAuth button.
+class _GoogleLogo extends StatelessWidget {
+  const _GoogleLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
+      'G',
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF4285F4),
       ),
     );
   }

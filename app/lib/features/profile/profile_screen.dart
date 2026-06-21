@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/theme.dart';
 import '../../data/supabase_client.dart';
 
 /// Profile screen — the Phase 0 destination after sign-in.
@@ -22,6 +23,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameCtl = TextEditingController();
   final _avatarCtl = TextEditingController();
+  final _avatarFocus = FocusNode();
   Map<String, dynamic>? _profile;
   bool _loading = true;
   bool _saving = false;
@@ -38,6 +40,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void dispose() {
     _nameCtl.dispose();
     _avatarCtl.dispose();
+    _avatarFocus.dispose();
     super.dispose();
   }
 
@@ -125,9 +128,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final isAdmin =
         (_profile?['is_platform_admin'] as bool?) ?? false;
 
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final displayName = _nameCtl.text.trim();
+    final initial = (displayName.isEmpty
+            ? (email.isNotEmpty ? email[0] : '?')
+            : displayName[0])
+        .toUpperCase();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(
+          'Profile',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: scheme.primary,
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: _loading ? null : _loadProfile,
@@ -139,73 +156,116 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (_error != null) ...[
                     Text(
                       _error!,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.error),
+                      style: TextStyle(color: scheme.error),
                     ),
                     const SizedBox(height: 12),
                   ],
-                  // Identity summary
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
-                    child: Text(
-                      (_nameCtl.text.isEmpty
-                              ? (email.isNotEmpty ? email[0] : '?')
-                              : _nameCtl.text[0])
-                          .toUpperCase(),
-                      style: Theme.of(context).textTheme.headlineSmall,
+
+                  // Identity block — avatar with an edit affordance.
+                  Center(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: scheme.primary.withValues(alpha: 0.10),
+                            border: Border.all(color: scheme.surface, width: 4),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            initial,
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: scheme.primary,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: -2,
+                          bottom: -2,
+                          child: Material(
+                            color: kBrandGreen,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () => _avatarFocus.requestFocus(),
+                              child: const Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Icon(Icons.edit,
+                                    size: 16, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+                  if (displayName.isNotEmpty)
+                    Text(
+                      displayName,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  const SizedBox(height: 2),
                   Text(
                     email,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),
 
-                  // MMR chip + admin badge
+                  // MMR + role badges.
                   Wrap(
                     spacing: 8,
                     alignment: WrapAlignment.center,
                     children: [
-                      Chip(
-                        avatar: const Icon(Icons.trending_up, size: 18),
-                        label: Text('MMR $mmr'),
+                      _StatChip(
+                        icon: Icons.trending_up,
+                        label: 'MMR $mmr',
+                        tinted: true,
                       ),
                       if (isAdmin)
-                        const Chip(
-                          avatar: Icon(Icons.shield, size: 18),
-                          label: Text('Admin'),
+                        const _StatChip(
+                          icon: Icons.shield,
+                          label: 'Admin',
+                          tinted: false,
                         ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
 
                   TextField(
                     controller: _nameCtl,
+                    onChanged: (_) => setState(() {}),
                     decoration: const InputDecoration(
                       labelText: 'Display name',
                       prefixIcon: Icon(Icons.person_outline),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   TextField(
                     controller: _avatarCtl,
+                    focusNode: _avatarFocus,
+                    keyboardType: TextInputType.url,
                     decoration: const InputDecoration(
                       labelText: 'Avatar URL (optional)',
                       prefixIcon: Icon(Icons.image_outlined),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _saving ? null : _save,
                     icon: _saving
@@ -217,7 +277,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         : const Icon(Icons.save_outlined),
                     label: const Text('Save profile'),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: _signOut,
                     icon: const Icon(Icons.logout),
@@ -227,23 +287,45 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 28),
                   // RLS probe result — visible so the Phase 0 demo is explicit.
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
+                      color: scheme.surfaceContainerHighest
+                          .withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(kRadius),
                     ),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.lock_outline,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.primary),
-                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: scheme.surface,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(Icons.lock_outline,
+                              size: 18, color: scheme.primary),
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            _rlsNote,
-                            style: Theme.of(context).textTheme.bodySmall,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'SECURITY ACCESS',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: scheme.outline,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _rlsNote,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -252,6 +334,50 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+/// Small rounded badge for a stat (e.g. "MMR 1050") or role (e.g. "Admin").
+/// [tinted] gives it a green-tinted background; otherwise it's neutral.
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.tinted,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool tinted;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final bg = tinted
+        ? scheme.primary.withValues(alpha: 0.08)
+        : const Color(0xFFF1F5F9);
+    final fg = tinted ? scheme.primary : scheme.onSurfaceVariant;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: fg),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1F2937),
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
