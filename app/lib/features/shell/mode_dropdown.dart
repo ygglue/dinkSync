@@ -19,13 +19,8 @@ class ModeDropdown extends ConsumerWidget {
   static IconData _icon(AppMode m) =>
       m == AppMode.management ? Icons.storefront_outlined : Icons.sports_tennis;
 
-  /// Compact label shown in the closed pill.
-  static String _shortLabel(AppMode m) =>
+  static String _label(AppMode m) =>
       m == AppMode.management ? 'Manage' : 'Play';
-
-  /// Full label shown in the open menu.
-  static String _menuLabel(AppMode m) =>
-      m == AppMode.management ? 'Court Management' : 'Play';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -58,7 +53,7 @@ class ModeDropdown extends ConsumerWidget {
                   size: 18,
                   color: selected ? scheme.primary : scheme.onSurfaceVariant),
               const SizedBox(width: 10),
-              Text(_menuLabel(m)),
+              Text(_label(m)),
               if (selected) ...[
                 const SizedBox(width: 12),
                 Icon(Icons.check_rounded, size: 18, color: scheme.primary),
@@ -79,7 +74,7 @@ class ModeDropdown extends ConsumerWidget {
             Icon(_icon(mode), size: 18, color: scheme.primary),
             const SizedBox(width: 6),
             Text(
-              _shortLabel(mode),
+              _label(mode),
               style: theme.textTheme.labelLarge?.copyWith(
                 color: scheme.onSurface,
                 fontWeight: FontWeight.w600,
