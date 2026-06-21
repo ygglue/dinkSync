@@ -2,70 +2,69 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/app_mode.dart';
-import '../../data/capabilities.dart';
-import '../shell/mode_dropdown.dart';
-import 'court_onboarding_screen.dart';
 import 'court_repository.dart';
 import 'owner_dashboard_screen.dart';
 
-/// Court Management mode entry. Shows onboarding if the user owns no court,
-/// otherwise the dashboard. Reachable by any signed-in user (first-time hosts).
-class ManagementScreen extends ConsumerWidget {
-  const ManagementScreen({super.key});
+/// Body of the Manage shell's "Dashboard" tab: the owner's court dashboard, or
+/// a prompt to set one up. The surrounding app bar + bottom nav live in
+/// `ManageShell`; this widget returns body content only (no Scaffold).
+class ManagementHome extends ConsumerWidget {
+  const ManagementHome({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final courtAsync = ref.watch(ownerCourtProvider);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'dinkSync',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        actions: [
-          ModeDropdown(
-            onChanged: (m) {
-              if (m == AppMode.play) context.go('/play');
-            },
-          ),
-          const SizedBox(width: 4),
-        ],
+    return courtAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) => _ErrorRetry(
+        onRetry: () => ref.invalidate(ownerCourtProvider),
       ),
-      body: courtAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => _ErrorRetry(
-          onRetry: () => ref.invalidate(ownerCourtProvider),
+      data: (court) {
+        if (court == null) {
+          return _NoCourt(onCreate: () => context.push('/onboard'));
+        }
+        return OwnerDashboard(
+          court: court,
+          onEdit: () => context.push('/manage/edit'),
+          onSubscribe: () => context.push('/manage/subscribe'),
+        );
+      },
+    );
+  }
+}
+
+class _NoCourt extends StatelessWidget {
+  const _NoCourt({required this.onCreate});
+
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.storefront_outlined,
+                size: 48, color: theme.colorScheme.primary),
+            const SizedBox(height: 12),
+            Text('No court yet', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(
+              'Set up your court to start managing it.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: onCreate,
+              child: const Text('Set up your court'),
+            ),
+          ],
         ),
-        data: (court) {
-          if (court == null) {
-            return CourtOnboardingScreen(
-              onCreated: (_) {
-                ref.invalidate(ownerCourtProvider);
-                ref.invalidate(capabilitiesProvider);
-                context.go('/manage/subscribe');
-              },
-            );
-          }
-          if (!court.isActive) {
-            // Allow jumping straight to subscribe from a suspended court.
-            return OwnerDashboard(
-              court: court,
-              onEdit: () => context.go('/manage/edit'),
-              onSubscribe: () => context.go('/manage/subscribe'),
-            );
-          }
-          return OwnerDashboard(
-            court: court,
-            onEdit: () => context.go('/manage/edit'),
-            onSubscribe: () {},
-          );
-        },
       ),
     );
   }
@@ -73,6 +72,7 @@ class ManagementScreen extends ConsumerWidget {
 
 class _ErrorRetry extends StatelessWidget {
   const _ErrorRetry({required this.onRetry});
+
   final VoidCallback onRetry;
 
   @override

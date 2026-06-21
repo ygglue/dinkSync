@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../data/capabilities.dart';
 import '../../data/supabase_client.dart';
 
 /// Profile screen — the Phase 0 destination after sign-in.
@@ -131,6 +132,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isManager =
+        ref.watch(capabilitiesProvider).valueOrNull?.isManager ?? false;
     final displayName = _nameCtl.text.trim();
     final initial = (displayName.isEmpty
             ? (email.isNotEmpty ? email[0] : '?')
@@ -284,12 +287,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     icon: const Icon(Icons.logout),
                     label: const Text('Sign out'),
                   ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () => context.go('/manage'),
-                    icon: const Icon(Icons.storefront_outlined),
-                    label: const Text('Own a court? Set it up'),
-                  ),
+                  if (!isManager) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push('/onboard'),
+                      icon: const Icon(Icons.storefront_outlined),
+                      label: const Text('Own a court? Set it up'),
+                    ),
+                  ],
 
                   const SizedBox(height: 28),
                   // RLS probe result — visible so the Phase 0 demo is explicit.
