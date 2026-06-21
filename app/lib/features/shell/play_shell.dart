@@ -12,9 +12,16 @@ class PlayShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('dinkSync'),
+        title: Text(
+          'dinkSync',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         actions: [
           ModeDropdown(
             onChanged: (m) {

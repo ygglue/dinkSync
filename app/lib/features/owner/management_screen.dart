@@ -16,11 +16,18 @@ class ManagementScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final courtAsync = ref.watch(ownerCourtProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Court Management'),
+        title: Text(
+          'dinkSync',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         actions: [
           ModeDropdown(
             onChanged: (m) {
