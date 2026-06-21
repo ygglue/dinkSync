@@ -88,15 +88,17 @@ Form fields:
 - **Entry fee** — entered in dollars, stored as integer cents (`entry_fee_cents`).
 - **Number of courts/slots** — integer, default 1, must be > 0.
 - **Address** — optional free-text (`courts.address`); lat/lng left null.
-- Currency defaults to `USD`.
+- Currency defaults to `PHP` (Philippines-first; the DB column still defaults to
+  `USD`, so the form/RPC passes `PHP` explicitly).
 
 Submit → `create_court` RPC → on success, route to the Subscription page for the
 new court. Styled per the `dinksync-ui` skill (24px rounded, kBrandGreen CTA,
 tonal inputs). Busy state disables the form; failures show inline error.
 
 ### 5.2 Subscription (`features/owner/subscription_screen.dart`)
-- Two plans: **Monthly** and **Yearly**, with placeholder prices
-  (`monthly = 2900` cents / $29.00, `yearly = 29000` cents / $290.00 — adjustable).
+- Two plans: **Monthly** and **Yearly**, in **PHP**, with startup-friendly
+  placeholder prices: `monthly = 99900` centavos (₱999.00) and
+  `yearly = 999000` centavos (₱9,990.00, ~2 months free) — adjustable.
 - "Subscribe" → `MockPaymentService` (auto-succeeds) → `subscribe_court` RPC →
   court becomes `active` → dashboard.
 - Reachable from a `suspended` dashboard banner (reactivation uses the same page).
@@ -138,8 +140,8 @@ reserved for matchmaking.
 
 **`subscribe_court(p_court_id uuid, p_plan text)`**
 - Asserts caller owns `p_court_id` (`courts.owner_profile_id = auth.uid()`).
-- Validates `p_plan ∈ ('monthly','yearly')`; derives `amount_cents` from a
-  **canonical server-side price map** (client never sends the price).
+- Validates `p_plan ∈ ('monthly','yearly')`; derives `amount_cents` and currency
+  (`PHP`) from a **canonical server-side price map** (client never sends the price).
 - Inserts a `payments` row (`kind = 'subscription'`, `status = 'paid'`,
   `provider = 'mock'`, `payer_profile_id = auth.uid()`, `payee_court_id = p_court_id`,
   the derived amount).
@@ -150,8 +152,9 @@ reserved for matchmaking.
 - Rationale: `subscriptions` writes are RPC-only by policy; pricing is
   authoritative server-side so the client can't set its own amount.
 
-Placeholder prices (`monthly = 2900`, `yearly = 29000` cents) live in the RPC and
-are adjustable later. The client sends only the chosen plan.
+Placeholder prices (`monthly = 99900`, `yearly = 999000` centavos = ₱999 / ₱9,990,
+currency `PHP`) live in the RPC and are adjustable later. The client sends only
+the chosen plan.
 
 ## 7. Error handling & edge cases
 
