@@ -150,20 +150,18 @@ class _SubscribeRoute extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final courtAsync = ref.watch(ownerCourtProvider);
     return courtAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, s) =>
-          const Scaffold(body: Center(child: Text('Could not load court.'))),
+      loading: () => _LoadingSubPage(onBack: () => _backToManage(context)),
+      error: (e, s) => _ErrorSubPage(onBack: () => _backToManage(context)),
       data: (court) {
         if (court == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) _backToManage(context);
           });
-          return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+          return _LoadingSubPage(onBack: () => _backToManage(context));
         }
         return SubscriptionScreen(
           courtId: court.id,
+          onBack: () => _backToManage(context),
           onSubscribed: () {
             ref.invalidate(ownerCourtProvider);
             _backToManage(context);
@@ -180,17 +178,14 @@ class _EditRoute extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final courtAsync = ref.watch(ownerCourtProvider);
     return courtAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, s) =>
-          const Scaffold(body: Center(child: Text('Could not load court.'))),
+      loading: () => _LoadingSubPage(onBack: () => _backToManage(context)),
+      error: (e, s) => _ErrorSubPage(onBack: () => _backToManage(context)),
       data: (court) {
         if (court == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) _backToManage(context);
           });
-          return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+          return _LoadingSubPage(onBack: () => _backToManage(context));
         }
         return CourtEditScreen(
           court: court,
@@ -200,6 +195,37 @@ class _EditRoute extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// Loading frame for a full-screen sub-page while its court resolves. Carries
+/// its own back button so the user is never stranded without a way out.
+class _LoadingSubPage extends StatelessWidget {
+  const _LoadingSubPage({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(leading: BackButton(onPressed: onBack)),
+      body: const Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Error frame for a full-screen sub-page, with a back button.
+class _ErrorSubPage extends StatelessWidget {
+  const _ErrorSubPage({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(leading: BackButton(onPressed: onBack)),
+      body: const Center(child: Text('Could not load court.')),
     );
   }
 }

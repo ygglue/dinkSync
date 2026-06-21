@@ -34,13 +34,15 @@ class _FakeRepo implements CourtRepository {
       String? address}) async {}
 }
 
-Widget _host(_FakeRepo repo, {void Function()? onSubscribed}) {
+Widget _host(_FakeRepo repo,
+    {void Function()? onSubscribed, void Function()? onBack}) {
   return ProviderScope(
     overrides: [courtRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
       home: SubscriptionScreen(
         courtId: 'court-1',
         onSubscribed: onSubscribed ?? () {},
+        onBack: onBack ?? () {},
       ),
     ),
   );
@@ -70,5 +72,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repo.subscribedPlan, SubscriptionPlan.yearly);
+  });
+
+  testWidgets('app bar back button invokes onBack', (tester) async {
+    final repo = _FakeRepo();
+    var backed = false;
+    await tester.pumpWidget(_host(repo, onBack: () => backed = true));
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(backed, true);
   });
 }

@@ -11,10 +11,15 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
     super.key,
     required this.courtId,
     required this.onSubscribed,
+    required this.onBack,
   });
 
   final String courtId;
   final void Function() onSubscribed;
+
+  /// Invoked by the app bar back button. The router wires this to pop back to
+  /// the management dashboard (or go there if there's nothing to pop).
+  final void Function() onBack;
 
   @override
   ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
@@ -90,7 +95,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Subscribe to publish')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: widget.onBack),
+        title: const Text('Subscribe to publish'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
