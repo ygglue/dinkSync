@@ -89,10 +89,9 @@ class SupabaseCourtRepository implements CourtRepository {
         .select()
         .eq('owner_profile_id', uid)
         .limit(1);
-    final list = rows as List;
-    return list.isEmpty
+    return rows.isEmpty
         ? null
-        : Court.fromMap(list.first as Map<String, dynamic>);
+        : Court.fromMap(rows.first);
   }
 
   @override
