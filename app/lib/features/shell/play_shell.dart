@@ -22,16 +22,17 @@ class PlayShell extends StatelessWidget {
             color: theme.colorScheme.primary,
           ),
         ),
-        actions: [
+      ),
+      body: Column(
+        children: [
           ModeDropdown(
             onChanged: (m) {
               if (m == AppMode.management) context.go('/manage');
             },
           ),
-          const SizedBox(width: 8),
+          Expanded(child: navigationShell),
         ],
       ),
-      body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (i) => navigationShell.goBranch(

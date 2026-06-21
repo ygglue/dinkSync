@@ -28,44 +28,47 @@ class ManagementScreen extends ConsumerWidget {
             color: theme.colorScheme.primary,
           ),
         ),
-        actions: [
+      ),
+      body: Column(
+        children: [
           ModeDropdown(
             onChanged: (m) {
               if (m == AppMode.play) context.go('/play');
             },
           ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: courtAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => _ErrorRetry(
-          onRetry: () => ref.invalidate(ownerCourtProvider),
-        ),
-        data: (court) {
-          if (court == null) {
-            return CourtOnboardingScreen(
-              onCreated: (_) {
-                ref.invalidate(ownerCourtProvider);
-                ref.invalidate(capabilitiesProvider);
-                context.go('/manage/subscribe');
+          Expanded(
+            child: courtAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, _) => _ErrorRetry(
+                onRetry: () => ref.invalidate(ownerCourtProvider),
+              ),
+              data: (court) {
+                if (court == null) {
+                  return CourtOnboardingScreen(
+                    onCreated: (_) {
+                      ref.invalidate(ownerCourtProvider);
+                      ref.invalidate(capabilitiesProvider);
+                      context.go('/manage/subscribe');
+                    },
+                  );
+                }
+                if (!court.isActive) {
+                  // Allow jumping straight to subscribe from a suspended court.
+                  return OwnerDashboard(
+                    court: court,
+                    onEdit: () => context.go('/manage/edit'),
+                    onSubscribe: () => context.go('/manage/subscribe'),
+                  );
+                }
+                return OwnerDashboard(
+                  court: court,
+                  onEdit: () => context.go('/manage/edit'),
+                  onSubscribe: () {},
+                );
               },
-            );
-          }
-          if (!court.isActive) {
-            // Allow jumping straight to subscribe from a suspended court.
-            return OwnerDashboard(
-              court: court,
-              onEdit: () => context.go('/manage/edit'),
-              onSubscribe: () => context.go('/manage/subscribe'),
-            );
-          }
-          return OwnerDashboard(
-            court: court,
-            onEdit: () => context.go('/manage/edit'),
-            onSubscribe: () {},
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }

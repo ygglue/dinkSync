@@ -4,13 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/app_mode.dart';
 import '../../data/capabilities.dart';
 
-/// Top-bar Play/Management switch, styled as a compact tonal pill. Renders
+/// Full-width Play/Management switch shown directly under the app bar. Renders
 /// nothing unless the user is a manager. Persists the selection and calls
 /// [onChanged] so the caller can navigate to the matching shell.
-///
-/// Uses a [PopupMenuButton] rather than a [DropdownButton] so the closed pill
-/// stays compact (a DropdownButton sizes itself to its widest item, which
-/// overflows a narrow app bar).
 class ModeDropdown extends ConsumerWidget {
   const ModeDropdown({super.key, required this.onChanged});
 
@@ -31,58 +27,43 @@ class ModeDropdown extends ConsumerWidget {
     final scheme = theme.colorScheme;
     final mode = ref.watch(appModeProvider);
 
-    return PopupMenuButton<AppMode>(
+    return Container(
       key: const Key('mode-dropdown'),
-      initialValue: mode,
-      tooltip: 'Switch mode',
-      position: PopupMenuPosition.under,
-      color: scheme.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      onSelected: (m) {
-        ref.read(appModeProvider.notifier).set(m);
-        onChanged(m);
-      },
-      itemBuilder: (context) => AppMode.values.map((m) {
-        final selected = m == mode;
-        return PopupMenuItem<AppMode>(
-          value: m,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(_icon(m),
-                  size: 18,
-                  color: selected ? scheme.primary : scheme.onSurfaceVariant),
-              const SizedBox(width: 10),
-              Text(_label(m)),
-              if (selected) ...[
-                const SizedBox(width: 12),
-                Icon(Icons.check_rounded, size: 18, color: scheme.primary),
-              ],
-            ],
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<AppMode>(
+          value: mode,
+          isExpanded: true,
+          borderRadius: BorderRadius.circular(16),
+          dropdownColor: scheme.surfaceContainerLowest,
+          icon: Icon(Icons.keyboard_arrow_down_rounded, color: scheme.primary),
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: scheme.onSurface,
+            fontWeight: FontWeight.w600,
           ),
-        );
-      }).toList(),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(_icon(mode), size: 18, color: scheme.primary),
-            const SizedBox(width: 6),
-            Text(
-              _label(mode),
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: scheme.onSurface,
-                fontWeight: FontWeight.w600,
+          onChanged: (m) {
+            if (m == null) return;
+            ref.read(appModeProvider.notifier).set(m);
+            onChanged(m);
+          },
+          items: AppMode.values.map((m) {
+            return DropdownMenuItem(
+              value: m,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(_icon(m), size: 18, color: scheme.primary),
+                  const SizedBox(width: 10),
+                  Text(_label(m)),
+                ],
               ),
-            ),
-            Icon(Icons.keyboard_arrow_down_rounded,
-                size: 20, color: scheme.primary),
-          ],
+            );
+          }).toList(),
         ),
       ),
     );
