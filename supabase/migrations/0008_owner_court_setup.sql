@@ -114,7 +114,7 @@ $$;
 -- Tighten court visibility: subscribed (active) => publicly visible; owner/
 -- staff see their own at any status; admin sees all.
 -- ---------------------------------------------------------------------------
-drop policy "courts_select" on public.courts;
+drop policy if exists "courts_select" on public.courts;
 create policy "courts_select"
   on public.courts for select
   using (
