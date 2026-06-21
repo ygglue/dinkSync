@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../data/supabase_client.dart';
@@ -282,6 +283,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     onPressed: _signOut,
                     icon: const Icon(Icons.logout),
                     label: const Text('Sign out'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/manage'),
+                    icon: const Icon(Icons.storefront_outlined),
+                    label: const Text('Own a court? Set it up'),
                   ),
 
                   const SizedBox(height: 28),

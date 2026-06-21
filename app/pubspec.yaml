@@ -26,6 +26,9 @@ dependencies:
   # Typography (Plus Jakarta Sans headlines + Inter body — design system)
   google_fonts: ^6.2.1
 
+  # Local persistence (remembers Play/Management mode)
+  shared_preferences: ^2.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
