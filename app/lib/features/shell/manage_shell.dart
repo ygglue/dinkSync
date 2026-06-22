@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../data/app_mode.dart';
 import 'mode_dropdown.dart';
 
-/// Bottom-nav scaffold for Play mode. Wraps the Play/Social/Profile branches.
-class PlayShell extends StatelessWidget {
-  const PlayShell({super.key, required this.navigationShell});
+/// Bottom-nav scaffold for Court Management mode: Dashboard / Staff / Profile.
+/// Profile is the one tab shared with the Play shell.
+class ManageShell extends StatelessWidget {
+  const ManageShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
@@ -25,7 +26,7 @@ class PlayShell extends StatelessWidget {
         actions: [
           ModeDropdown(
             onChanged: (m) {
-              if (m == AppMode.management) context.go('/manage');
+              if (m == AppMode.play) context.go('/play');
             },
           ),
           const SizedBox(width: 4),
@@ -40,13 +41,13 @@ class PlayShell extends StatelessWidget {
         ),
         destinations: const [
           NavigationDestination(
-              icon: Icon(Icons.sports_tennis_outlined),
-              selectedIcon: Icon(Icons.sports_tennis),
-              label: 'Play'),
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: 'Dashboard'),
           NavigationDestination(
-              icon: Icon(Icons.groups_outlined),
-              selectedIcon: Icon(Icons.groups),
-              label: 'Social'),
+              icon: Icon(Icons.group_outlined),
+              selectedIcon: Icon(Icons.group),
+              label: 'Staff'),
           NavigationDestination(
               icon: Icon(Icons.person_outline),
               selectedIcon: Icon(Icons.person),
