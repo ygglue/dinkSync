@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../data/capabilities.dart';
 import '../../data/supabase_client.dart';
+import 'appearance_selector.dart';
 
 /// Profile screen — the Phase 0 destination after sign-in.
 ///
@@ -295,6 +296,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       label: const Text('Own a court? Set it up'),
                     ),
                   ],
+
+                  const SizedBox(height: 28),
+                  const AppearanceSelector(),
 
                   const SizedBox(height: 28),
                   // RLS probe result — visible so the Phase 0 demo is explicit.
