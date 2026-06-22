@@ -151,8 +151,10 @@ final courtAvailabilityProvider = FutureProvider.family<CourtAvailability, Strin
 
 ### `CourtDetailScreen` (`/play/court/:id`)
 
-- Own `Scaffold` + `AppBar(title: court name)` — pushed within the Play branch,
-  so a back button appears automatically and the bottom nav stays visible.
+- Own `Scaffold` + `AppBar(title: court name)` — pushed full-screen on the root
+  navigator (like `/manage/edit`), so the back button appears automatically.
+  The Play bottom nav is hidden while viewing a single court (consistent with
+  the existing manage sub-pages).
 - Watches `courtByIdProvider(id)` for venue info and
   `courtAvailabilityProvider(id)` for live availability.
 - Renders: name (headline), address, entry fee (`formatFee`), number of courts;
@@ -164,27 +166,34 @@ final courtAvailabilityProvider = FutureProvider.family<CourtAvailability, Strin
 
 ## Routing
 
-Add `court/:id` as a sub-route of the existing `/play` branch in
-`app/lib/app/router.dart`:
+Two changes in `app/lib/app/router.dart`:
+
+1. The `/play` branch builds `CourtListScreen` (replacing the "Find a game"
+   `PlaceholderTab`):
 
 ```dart
 StatefulShellBranch(routes: [
-  GoRoute(
-    path: '/play',
-    builder: (c, s) => const CourtListScreen(),
-    routes: [
-      GoRoute(
-        path: 'court/:id',
-        builder: (c, s) => CourtDetailScreen(courtId: s.pathParameters['id']!),
-      ),
-    ],
-  ),
+  GoRoute(path: '/play', builder: (c, s) => const CourtListScreen()),
 ]),
 ```
 
-This replaces the current "Find a game" `PlaceholderTab`. Because the detail
-route is nested in the branch (not pushed on the root navigator), the Play
-bottom nav remains visible and the back button is automatic.
+2. A `/play/court/:id` route pushed full-screen on the root navigator,
+   alongside the existing `/manage/edit` etc.:
+
+```dart
+GoRoute(
+  path: '/play/court/:id',
+  parentNavigatorKey: _rootNavigatorKey,
+  builder: (c, s) => CourtDetailScreen(courtId: s.pathParameters['id']!),
+),
+```
+
+The list navigates with `context.push('/play/court/<id>')`. The detail page
+therefore owns its `Scaffold`/`AppBar`; the back button is automatic and the
+bottom nav is hidden during detail view (matching the manage sub-pages). The
+nested-branch approach is deliberately avoided: the Play shell supplies a
+static AppBar, so a nested detail page would either double the app bar or lack
+a back button.
 
 ## Error Handling
 
@@ -232,5 +241,5 @@ Follow the existing pattern: `ProviderScope` with provider overrides and a hand
 - **Modify** `app/lib/features/owner/court_repository.dart` — remove `Court`,
   import + re-export it from `data/court.dart`.
 - **Modify** `app/lib/app/router.dart` — `/play` → `CourtListScreen`, add
-  nested `court/:id` route.
+  root-level `/play/court/:id` route (full-screen push).
 - **Create** tests for the repository helpers and both screens.
