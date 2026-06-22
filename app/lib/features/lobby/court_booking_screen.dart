@@ -75,14 +75,15 @@ class _CourtBookingScreenState extends ConsumerState<CourtBookingScreen> {
             endsAt: ends,
           );
       if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        context.pop();
+        // Read slot label BEFORE popping (ref may be invalid after pop)
         final slots = ref.read(courtSlotsProvider(widget.court.id)).valueOrNull;
         final label = slots != null
             ? (slots.where((s) => s.id == slotId).isNotEmpty
                 ? slots.firstWhere((s) => s.id == slotId).label
                 : 'your court')
             : 'your court';
+        final messenger = ScaffoldMessenger.of(context);
+        context.pop();
         messenger.showSnackBar(
           SnackBar(content: Text('Booked! See you on $label.')),
         );
