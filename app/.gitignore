@@ -46,3 +46,4 @@ app.*.map.json
 
 # Secrets — keep real keys out of version control
 .env
+flutter_*.png
