@@ -9,7 +9,8 @@ import 'discovery_repository.dart';
 /// Body of the Play shell's first tab: a searchable list of active courts.
 /// Body-only — the Play shell supplies the app bar and bottom nav.
 class CourtListScreen extends ConsumerStatefulWidget {
-  const CourtListScreen({super.key});
+  const CourtListScreen({super.key, this.onSelect});
+  final void Function(Court court)? onSelect;
 
   @override
   ConsumerState<CourtListScreen> createState() => _CourtListScreenState();
@@ -56,7 +57,8 @@ class _CourtListScreenState extends ConsumerState<CourtListScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                 itemCount: filtered.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, i) => _CourtCard(court: filtered[i]),
+                itemBuilder: (context, i) =>
+                    _CourtCard(court: filtered[i], onSelect: widget.onSelect),
               );
             },
           ),
@@ -67,9 +69,10 @@ class _CourtListScreenState extends ConsumerState<CourtListScreen> {
 }
 
 class _CourtCard extends StatelessWidget {
-  const _CourtCard({required this.court});
+  const _CourtCard({required this.court, this.onSelect});
 
   final Court court;
+  final void Function(Court)? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -80,13 +83,37 @@ class _CourtCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(kRadius),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/play/court/${court.id}'),
+        onTap: onSelect != null
+            ? () => onSelect!(court)
+            : () => context.push('/play/court/${court.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: _CourtImage(imageUrl: court.imageUrl),
+            Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: _CourtImage(imageUrl: court.imageUrl),
+                ),
+                if (onSelect != null)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Material(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(100),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(100),
+                        onTap: () => context.push('/play/court/${court.id}'),
+                        child: const Padding(
+                          padding: EdgeInsets.all(6),
+                          child: Icon(Icons.info_outline,
+                              color: Colors.white, size: 18),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.all(16),

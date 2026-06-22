@@ -50,6 +50,17 @@ Widget _host(List<Court> courts) => ProviderScope(
       child: const MaterialApp(home: Scaffold(body: CourtListScreen())),
     );
 
+// New helper for picker mode:
+Widget _pickerHost(List<Court> courts, void Function(Court) onSelect) =>
+    ProviderScope(
+      overrides: [
+        discoveryRepositoryProvider.overrideWithValue(_FakeRepo(courts)),
+      ],
+      child: MaterialApp(
+        home: Scaffold(body: CourtListScreen(onSelect: onSelect)),
+      ),
+    );
+
 void main() {
   testWidgets('lists courts with name and fee', (tester) async {
     await tester.pumpWidget(_host(_courts));
@@ -86,5 +97,31 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('No courts match'), findsOneWidget);
+  });
+
+  testWidgets('picker mode: tapping card calls onSelect, not navigation',
+      (tester) async {
+    Court? selected;
+    await tester.pumpWidget(_pickerHost(_courts, (c) => selected = c));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Cebu Dinks'));
+    await tester.pump();
+
+    expect(selected?.id, 'c1');
+  });
+
+  testWidgets('picker mode: info button is shown on each card', (tester) async {
+    await tester.pumpWidget(_pickerHost(_courts, (_) {}));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.info_outline), findsNWidgets(2));
+  });
+
+  testWidgets('normal mode: info button is NOT shown', (tester) async {
+    await tester.pumpWidget(_host(_courts));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.info_outline), findsNothing);
   });
 }
