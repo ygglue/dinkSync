@@ -59,5 +59,34 @@ void main() {
       expect(c.isActive, false);
       expect(c.address, null);
     });
+    test('Court.fromMap maps custom_fee_cents', () {
+      final c = Court.fromMap({
+        'id': 'x1',
+        'name': 'Test',
+        'status': 'active',
+        'entry_fee_cents': 10000,
+        'currency': 'PHP',
+        'num_courts': 2,
+        'address': null,
+        'image_url': null,
+        'custom_fee_cents': 50000,
+      });
+      expect(c.customFeeCents, 50000);
+    });
+
+    test('Court.fromMap custom_fee_cents null when absent', () {
+      final c = Court.fromMap({
+        'id': 'x2',
+        'name': 'Test2',
+        'status': 'active',
+        'entry_fee_cents': 0,
+        'currency': 'PHP',
+        'num_courts': 1,
+        'address': null,
+        'image_url': null,
+        'custom_fee_cents': null,
+      });
+      expect(c.customFeeCents, isNull);
+    });
   });
 }

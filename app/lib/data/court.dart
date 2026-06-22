@@ -10,6 +10,7 @@ class Court {
     required this.numCourts,
     this.address,
     this.imageUrl,
+    this.customFeeCents,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class Court {
   final int numCourts;
   final String? address;
   final String? imageUrl;
+  final int? customFeeCents;
 
   bool get isActive => status == 'active';
 
@@ -32,6 +34,7 @@ class Court {
         numCourts: m['num_courts'] as int,
         address: m['address'] as String?,
         imageUrl: m['image_url'] as String?,
+        customFeeCents: m['custom_fee_cents'] as int?,
       );
 }
 
