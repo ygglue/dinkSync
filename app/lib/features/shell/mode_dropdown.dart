@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme.dart';
 import '../../data/app_mode.dart';
 import '../../data/capabilities.dart';
 
@@ -176,7 +175,7 @@ class _ModeRow extends StatelessWidget {
             const SizedBox(width: 12),
             Icon(
               selected ? Icons.check_circle_rounded : Icons.circle_outlined,
-              color: selected ? kBrandGreen : scheme.outlineVariant,
+              color: selected ? scheme.primary : scheme.outlineVariant,
             ),
           ],
         ),

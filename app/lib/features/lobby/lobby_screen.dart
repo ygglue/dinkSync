@@ -58,7 +58,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                     Icon(
                       Icons.stadium_outlined,
                       color: _selectedCourt != null
-                          ? kBrandGreen
+                          ? scheme.primary
                           : scheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 12),
@@ -143,7 +143,7 @@ class _PlayerSlot extends StatelessWidget {
             child: Text(
               initial,
               style: theme.textTheme.headlineSmall?.copyWith(
-                color: kBrandGreen,
+                color: scheme.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),

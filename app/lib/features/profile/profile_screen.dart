@@ -199,15 +199,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           right: -2,
                           bottom: -2,
                           child: Material(
-                            color: kBrandGreen,
+                            color: scheme.primary,
                             shape: const CircleBorder(),
                             child: InkWell(
                               customBorder: const CircleBorder(),
                               onTap: () => _avatarFocus.requestFocus(),
-                              child: const Padding(
-                                padding: EdgeInsets.all(6),
+                              child: Padding(
+                                padding: const EdgeInsets.all(6),
                                 child: Icon(Icons.edit,
-                                    size: 16, color: Colors.white),
+                                    size: 16, color: scheme.onPrimary),
                               ),
                             ),
                           ),
@@ -372,7 +372,7 @@ class _StatChip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final bg = tinted
         ? scheme.primary.withValues(alpha: 0.08)
-        : const Color(0xFFF1F5F9);
+        : scheme.surfaceContainerHighest;
     final fg = tinted ? scheme.primary : scheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -389,7 +389,7 @@ class _StatChip extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1F2937),
+                  color: fg,
                 ),
           ),
         ],

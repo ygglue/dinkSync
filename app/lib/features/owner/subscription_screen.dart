@@ -64,14 +64,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           color: scheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(kRadius),
           border: Border.all(
-            color: selected ? kBrandGreen : scheme.outlineVariant,
+            color: selected ? scheme.primary : scheme.outlineVariant,
             width: selected ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
             Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? kBrandGreen : scheme.onSurfaceVariant),
+                color: selected ? scheme.primary : scheme.onSurfaceVariant),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
