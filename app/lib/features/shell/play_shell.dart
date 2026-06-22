@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/app_mode.dart';
+import 'floating_nav_bar.dart';
 import 'mode_dropdown.dart';
 
 /// Bottom-nav scaffold for Play mode. Wraps the Play/Social/Profile branches.
@@ -31,26 +32,35 @@ class PlayShell extends StatelessWidget {
           const SizedBox(width: 4),
         ],
       ),
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (i) => navigationShell.goBranch(
-          i,
-          initialLocation: i == navigationShell.currentIndex,
-        ),
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.sports_tennis_outlined),
-              selectedIcon: Icon(Icons.sports_tennis),
-              label: 'Play'),
-          NavigationDestination(
-              icon: Icon(Icons.groups_outlined),
-              selectedIcon: Icon(Icons.groups),
-              label: 'Social'),
-          NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Profile'),
+      body: Stack(
+        children: [
+          navigationShell,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: FloatingNavBar(
+              selectedIndex: navigationShell.currentIndex,
+              onDestinationSelected: (i) => navigationShell.goBranch(
+                i,
+                initialLocation: i == navigationShell.currentIndex,
+              ),
+              destinations: const [
+                FloatingNavDestination(
+                  icon: Icon(Icons.sports_tennis_outlined),
+                  selectedIcon: Icon(Icons.sports_tennis),
+                ),
+                FloatingNavDestination(
+                  icon: Icon(Icons.groups_outlined),
+                  selectedIcon: Icon(Icons.groups),
+                ),
+                FloatingNavDestination(
+                  icon: Icon(Icons.person_outline),
+                  selectedIcon: Icon(Icons.person),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -1,40 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../data/court.dart';
 import '../../data/supabase_client.dart';
 
-/// A court venue owned/managed by the current user.
-class Court {
-  const Court({
-    required this.id,
-    required this.name,
-    required this.status,
-    required this.entryFeeCents,
-    required this.currency,
-    required this.numCourts,
-    this.address,
-  });
-
-  final String id;
-  final String name;
-  final String status; // active | suspended | offboarded
-  final int entryFeeCents;
-  final String currency;
-  final int numCourts;
-  final String? address;
-
-  bool get isActive => status == 'active';
-
-  factory Court.fromMap(Map<String, dynamic> m) => Court(
-        id: m['id'] as String,
-        name: m['name'] as String,
-        status: m['status'] as String,
-        entryFeeCents: m['entry_fee_cents'] as int,
-        currency: m['currency'] as String,
-        numCourts: m['num_courts'] as int,
-        address: m['address'] as String?,
-      );
-}
+// Court moved to data/court.dart; re-exported so existing importers
+// (`import '.../court_repository.dart'`) keep resolving `Court`.
+export '../../data/court.dart' show Court;
 
 enum SubscriptionPlan { monthly, yearly }
 
