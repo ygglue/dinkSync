@@ -271,7 +271,9 @@ class _PillToggle extends StatelessWidget {
             curve: Curves.easeOut,
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: selected ? kBrandGreen : Colors.transparent,
+              color: selected
+                  ? theme.colorScheme.primary
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -281,7 +283,7 @@ class _PillToggle extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: selected
-                    ? Colors.white
+                    ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onSurfaceVariant,
               ),
             ),
@@ -293,7 +295,7 @@ class _PillToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(

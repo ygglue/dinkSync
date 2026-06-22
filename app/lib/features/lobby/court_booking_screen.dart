@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme.dart';
 import '../../data/court.dart';
 import 'booking_repository.dart';
 
@@ -150,7 +149,7 @@ class _CourtBookingScreenState extends ConsumerState<CourtBookingScreen> {
                         horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? kBrandGreen
+                          ? scheme.primary
                           : scheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(100),
                     ),
@@ -158,7 +157,7 @@ class _CourtBookingScreenState extends ConsumerState<CourtBookingScreen> {
                       _dayLabel(day),
                       style: TextStyle(
                         color:
-                            isSelected ? Colors.white : scheme.onSurface,
+                            isSelected ? scheme.onPrimary : scheme.onSurface,
                         fontWeight: isSelected
                             ? FontWeight.w600
                             : FontWeight.normal,
@@ -292,7 +291,7 @@ class _HourBlock extends StatelessWidget {
 
     Color bg;
     if (isSelected) {
-      bg = kBrandGreen.withValues(alpha: 0.15);
+      bg = scheme.primary.withValues(alpha: 0.15);
     } else if (isBooked) {
       bg = scheme.surfaceContainerHighest;
     } else {
@@ -333,7 +332,7 @@ class _HourBlock extends StatelessWidget {
               ),
             if (isSelected && !isBooked)
               Icon(Icons.check_circle_outline,
-                  size: 16, color: kBrandGreen.withValues(alpha: 0.7)),
+                  size: 16, color: scheme.primary.withValues(alpha: 0.7)),
           ],
         ),
       ),

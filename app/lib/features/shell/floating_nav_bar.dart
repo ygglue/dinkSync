@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme.dart';
-
 class FloatingNavDestination {
   const FloatingNavDestination({
     required this.icon,
@@ -55,7 +53,7 @@ class FloatingNavBar extends StatelessWidget {
                     child: Container(
                       margin: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
-                        color: kBrandGreen.withValues(alpha: 0.28),
+                        color: scheme.primary.withValues(alpha: 0.28),
                         borderRadius: BorderRadius.circular(100),
                       ),
                     ),
@@ -105,7 +103,7 @@ class _NavItem extends StatelessWidget {
         child: Center(
           child: IconTheme(
             data: IconThemeData(
-              color: selected ? kBrandGreen : scheme.onSurfaceVariant,
+              color: selected ? scheme.primary : scheme.onSurfaceVariant,
               size: 24,
             ),
             child: selected ? destination.selectedIcon : destination.icon,
