@@ -23,5 +23,16 @@ void main() {
       final b = CourtBookingQuery(slotId: 'slot-1', date: DateTime(2026, 6, 23));
       expect(a, isNot(equals(b)));
     });
+
+    test('date normalised to midnight — different times same day are equal', () {
+      final a = CourtBookingQuery(
+          slotId: 'slot-1',
+          date: DateTime(2026, 6, 22, 9, 30)); // 9:30am
+      final b = CourtBookingQuery(
+          slotId: 'slot-1',
+          date: DateTime(2026, 6, 22, 23, 59)); // 11:59pm
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+    });
   });
 }

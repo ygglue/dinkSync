@@ -17,7 +17,8 @@ class CustomBooking {
 
 /// Used as a Riverpod family arg — must implement == and hashCode.
 class CourtBookingQuery {
-  const CourtBookingQuery({required this.slotId, required this.date});
+  CourtBookingQuery({required this.slotId, required DateTime date})
+      : date = DateTime(date.year, date.month, date.day);
   final String slotId;
   final DateTime date; // date-only (year/month/day); time part ignored
 
