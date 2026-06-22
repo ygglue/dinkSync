@@ -79,8 +79,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          // Player slots
-          Expanded(
+          // Player slots — fixed height so the cards stay compact instead of
+          // stretching to fill the leftover vertical space.
+          SizedBox(
+            height: 168,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -90,12 +92,11 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          // Action row
+          const Spacer(),
+          // Action row — equal widths so "Book a Court" has room for its label.
           Row(
             children: [
               Expanded(
-                flex: 2,
                 child: FilledButton(
                   onPressed: null,
                   child: const Text('Find Match'),
@@ -175,8 +176,10 @@ class _PartnerSlot extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Container(
+      // Empty placeholder look: no fill (vs the filled "You" slot) + an outline,
+      // so it clearly reads as an open seat rather than an occupied one.
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(kRadius),
         border: Border.all(
           color: scheme.outlineVariant,
