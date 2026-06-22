@@ -9,6 +9,7 @@ import 'config/app_config.dart';
 import 'data/app_mode.dart';
 import 'data/capabilities.dart';
 import 'data/supabase_client.dart';
+import 'data/theme_mode.dart';
 import 'features/owner/court_repository.dart';
 
 Future<void> main() async {
@@ -47,6 +48,7 @@ class DinkSyncApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
     );
   }
