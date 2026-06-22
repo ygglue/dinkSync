@@ -9,6 +9,7 @@ class Court {
     required this.currency,
     required this.numCourts,
     this.address,
+    this.imageUrl,
   });
 
   final String id;
@@ -18,6 +19,7 @@ class Court {
   final String currency;
   final int numCourts;
   final String? address;
+  final String? imageUrl;
 
   bool get isActive => status == 'active';
 
@@ -29,6 +31,7 @@ class Court {
         currency: m['currency'] as String,
         numCourts: m['num_courts'] as int,
         address: m['address'] as String?,
+        imageUrl: m['image_url'] as String?,
       );
 }
 

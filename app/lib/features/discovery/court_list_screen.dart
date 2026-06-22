@@ -76,40 +76,79 @@ class _CourtCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Material(
-      color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+      color: scheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(kRadius),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(kRadius),
         onTap: () => context.push('/play/court/${court.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(court.name, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text(
-                      court.address ?? 'Address not set',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      formatFee(court.entryFeeCents, court.currency),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: scheme.primary, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: _CourtImage(imageUrl: court.imageUrl),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(court.name, style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          court.address ?? 'Address not set',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        formatFee(court.entryFeeCents, court.currency),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _CourtImage extends StatelessWidget {
+  const _CourtImage({required this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final placeholder = Container(
+      color: scheme.surfaceContainerHighest,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.sports_tennis,
+        size: 48,
+        color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
+      ),
+    );
+    if (imageUrl == null) return placeholder;
+    return Image.network(
+      imageUrl!,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => placeholder,
+      loadingBuilder: (_, child, progress) =>
+          progress == null ? child : placeholder,
     );
   }
 }
