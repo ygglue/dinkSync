@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_mode.dart';
 import '../data/capabilities.dart';
+import '../data/court.dart'; // ignore: unnecessary_import — direct import for robustness over re-export
 import '../data/supabase_client.dart';
 import '../features/auth/auth_screen.dart';
 import '../features/owner/court_edit_screen.dart';

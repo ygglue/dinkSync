@@ -51,12 +51,9 @@ class _CourtBookingScreenState extends ConsumerState<CourtBookingScreen> {
   }
 
   bool _isBooked(int hour, List<CustomBooking> bookings) {
-    for (final b in bookings) {
-      final start = b.startsAt.hour;
-      final end = b.endsAt.hour;
-      if (start <= hour && hour < end) return true;
-    }
-    return false;
+    final blockStart = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day, hour);
+    final blockEnd   = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day, hour + 1);
+    return bookings.any((b) => b.startsAt.isBefore(blockEnd) && b.endsAt.isAfter(blockStart));
   }
 
   Future<void> _confirmBooking(String slotId) async {
