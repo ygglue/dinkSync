@@ -47,9 +47,7 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
         .select()
         .eq('status', 'active')
         .order('name');
-    return (rows as List)
-        .map((r) => Court.fromMap(r as Map<String, dynamic>))
-        .toList();
+    return rows.map(Court.fromMap).toList();
   }
 
   @override
@@ -62,8 +60,7 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
   Future<CourtAvailability> availability(String courtId) async {
     final rows =
         await _db.from('court_slots').select('status').eq('court_id', courtId);
-    return CourtAvailability.fromSlotRows(
-        (rows as List).cast<Map<String, dynamic>>());
+    return CourtAvailability.fromSlotRows(rows);
   }
 }
 
