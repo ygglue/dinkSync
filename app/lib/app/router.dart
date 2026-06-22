@@ -14,6 +14,8 @@ import '../features/owner/court_onboarding_screen.dart';
 import '../features/owner/court_repository.dart';
 import '../features/owner/management_screen.dart';
 import '../features/owner/subscription_screen.dart';
+import '../features/discovery/court_detail_screen.dart';
+import '../features/discovery/court_list_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shell/launch_screen.dart';
 import '../features/shell/manage_shell.dart';
@@ -49,14 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (c, s, navShell) => PlayShell(navigationShell: navShell),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/play',
-              builder: (c, s) => const PlaceholderTab(
-                title: 'Find a game',
-                icon: Icons.sports_tennis,
-                message: 'Court discovery and matchmaking are coming soon.',
-              ),
-            ),
+            GoRoute(path: '/play', builder: (c, s) => const CourtListScreen()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
@@ -115,6 +110,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/manage/edit',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (c, s) => _EditRoute(),
+      ),
+      GoRoute(
+        path: '/play/court/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (c, s) => CourtDetailScreen(courtId: s.pathParameters['id']!),
       ),
     ],
   );
