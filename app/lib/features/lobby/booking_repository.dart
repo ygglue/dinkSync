@@ -105,14 +105,23 @@ final courtBookingsProvider =
   return ref.watch(bookingRepositoryProvider).bookingsForSlot(query);
 });
 
-final currentUserDisplayNameProvider = FutureProvider<String>((ref) async {
+class LobbyProfile {
+  const LobbyProfile({required this.displayName, required this.mmr});
+  final String displayName;
+  final int mmr;
+}
+
+final currentUserProfileProvider = FutureProvider<LobbyProfile>((ref) async {
   final uid = supabase.auth.currentUser?.id;
-  if (uid == null) return 'Player';
+  if (uid == null) return const LobbyProfile(displayName: 'Player', mmr: 1000);
   final rows = await supabase
       .from('profiles')
-      .select('display_name')
+      .select('display_name, mmr')
       .eq('id', uid)
       .limit(1);
-  if (rows.isEmpty) return 'Player';
-  return (rows.first['display_name'] as String?) ?? 'Player';
+  if (rows.isEmpty) return const LobbyProfile(displayName: 'Player', mmr: 1000);
+  return LobbyProfile(
+    displayName: (rows.first['display_name'] as String?) ?? 'Player',
+    mmr: (rows.first['mmr'] as int?) ?? 1000,
+  );
 });

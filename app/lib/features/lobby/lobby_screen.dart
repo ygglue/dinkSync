@@ -34,8 +34,9 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final nameAsync = ref.watch(currentUserDisplayNameProvider);
-    final displayName = nameAsync.valueOrNull ?? 'Player';
+    final profileAsync = ref.watch(currentUserProfileProvider);
+    final profile = profileAsync.valueOrNull ??
+        const LobbyProfile(displayName: 'Player', mmr: 1000);
     final canBook =
         _selectedCourt != null && _selectedCourt!.customFeeCents != null;
 
@@ -79,40 +80,48 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          // Player slots — fixed height so the cards stay compact instead of
-          // stretching to fill the leftover vertical space.
-          SizedBox(
-            height: 168,
+          // Player slots — let them grow to fill available space.
+          Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(child: _PlayerSlot(displayName: displayName)),
+                Expanded(child: _PlayerSlot(profile: profile)),
                 const SizedBox(width: 12),
                 const Expanded(child: _PartnerSlot()),
               ],
             ),
           ),
-          const Spacer(),
-          // Action row — equal widths so "Book a Court" has room for its label.
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton(
-                  onPressed: null,
-                  child: const Text('Find Match'),
-                ),
+          const SizedBox(height: 24),
+          // Find Match — primary CTA, tall and prominent.
+          FilledButton(
+            onPressed: null,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
+              textStyle: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: canBook
-                      ? () => context.push('/play/custom',
-                          extra: _selectedCourt)
-                      : null,
-                  child: const Text('Book a Court'),
-                ),
-              ),
-            ],
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.sports_tennis, size: 20),
+                SizedBox(width: 10),
+                Text('Find Match'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Book a Court — secondary CTA.
+          OutlinedButton(
+            onPressed: canBook
+                ? () => context.push('/play/custom', extra: _selectedCourt)
+                : null,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+            ),
+            child: const Text('Book a Court'),
           ),
         ],
       ),
@@ -121,14 +130,15 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
 }
 
 class _PlayerSlot extends StatelessWidget {
-  const _PlayerSlot({required this.displayName});
-  final String displayName;
+  const _PlayerSlot({required this.profile});
+  final LobbyProfile profile;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    final initial =
+        profile.displayName.isNotEmpty ? profile.displayName[0].toUpperCase() : '?';
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
@@ -138,25 +148,49 @@ class _PlayerSlot extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircleAvatar(
-            radius: 28,
-            backgroundColor: scheme.primary.withValues(alpha: 0.1),
+            radius: 36,
+            backgroundColor: scheme.primary.withValues(alpha: 0.12),
             child: Text(
               initial,
-              style: theme.textTheme.headlineSmall?.copyWith(
+              style: theme.textTheme.headlineMedium?.copyWith(
                 color: scheme.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
-            displayName,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            profile.displayName,
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
+          // MMR badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.bar_chart_rounded,
+                    size: 14, color: scheme.primary),
+                const SizedBox(width: 4),
+                Text(
+                  '${profile.mmr} MMR',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
           Text(
             'You',
             style: theme.textTheme.labelSmall
@@ -176,8 +210,6 @@ class _PartnerSlot extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Container(
-      // Empty placeholder look: no fill (vs the filled "You" slot) + an outline,
-      // so it clearly reads as an open seat rather than an occupied one.
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(kRadius),
@@ -191,18 +223,26 @@ class _PartnerSlot extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.person_add_outlined,
-              size: 48, color: scheme.onSurfaceVariant.withValues(alpha: 0.5)),
-          const SizedBox(height: 10),
+              size: 52, color: scheme.onSurfaceVariant.withValues(alpha: 0.5)),
+          const SizedBox(height: 12),
           Text(
             'Invite partner',
-            style: theme.textTheme.bodyMedium
+            style: theme.textTheme.titleSmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Coming soon',
-            style: theme.textTheme.labelSmall
-                ?.copyWith(color: scheme.onSurfaceVariant.withValues(alpha: 0.6)),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: scheme.outlineVariant.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Text(
+              'Coming soon',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
           ),
         ],
       ),
