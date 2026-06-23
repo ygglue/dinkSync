@@ -106,9 +106,14 @@ final courtBookingsProvider =
 });
 
 class LobbyProfile {
-  const LobbyProfile({required this.displayName, required this.mmr});
+  const LobbyProfile({
+    required this.displayName,
+    required this.mmr,
+    this.avatarUrl,
+  });
   final String displayName;
   final int mmr;
+  final String? avatarUrl;
 }
 
 final currentUserProfileProvider = FutureProvider<LobbyProfile>((ref) async {
@@ -116,12 +121,13 @@ final currentUserProfileProvider = FutureProvider<LobbyProfile>((ref) async {
   if (uid == null) return const LobbyProfile(displayName: 'Player', mmr: 1000);
   final rows = await supabase
       .from('profiles')
-      .select('display_name, mmr')
+      .select('display_name, mmr, avatar_url')
       .eq('id', uid)
       .limit(1);
   if (rows.isEmpty) return const LobbyProfile(displayName: 'Player', mmr: 1000);
   return LobbyProfile(
     displayName: (rows.first['display_name'] as String?) ?? 'Player',
     mmr: (rows.first['mmr'] as int?) ?? 1000,
+    avatarUrl: rows.first['avatar_url'] as String?,
   );
 });

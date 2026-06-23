@@ -53,7 +53,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
               borderRadius: BorderRadius.circular(kRadius),
               onTap: _pickCourt,
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Row(
                   children: [
                     Icon(
@@ -66,21 +66,22 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                     Expanded(
                       child: Text(
                         _selectedCourt?.name ?? 'Select a court',
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           color: _selectedCourt != null
-                              ? null
+                              ? scheme.onSurface
                               : scheme.onSurfaceVariant,
                         ),
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+                    Icon(Icons.chevron_right,
+                        size: 20, color: scheme.onSurfaceVariant),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          // Player slots — let them grow to fill available space.
+          const SizedBox(height: 16),
+          // Player slots — fill remaining vertical space.
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -91,8 +92,8 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          // Find Match — primary CTA, tall and prominent.
+          const SizedBox(height: 16),
+          // Find Match — primary CTA.
           FilledButton(
             onPressed: null,
             style: FilledButton.styleFrom(
@@ -112,15 +113,11 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 10),
-          // Book a Court — secondary CTA.
-          OutlinedButton(
+          // Book a Court — ghost/text secondary CTA.
+          TextButton(
             onPressed: canBook
                 ? () => context.push('/play/custom', extra: _selectedCourt)
                 : null,
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-            ),
             child: const Text('Book a Court'),
           ),
         ],
@@ -139,62 +136,103 @@ class _PlayerSlot extends StatelessWidget {
     final scheme = theme.colorScheme;
     final initial =
         profile.displayName.isNotEmpty ? profile.displayName[0].toUpperCase() : '?';
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(kRadius),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(kRadius),
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Text(
-              initial,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.bold,
+          // Background: network photo when available, tonal gradient otherwise.
+          if (profile.avatarUrl != null)
+            Image.network(profile.avatarUrl!, fit: BoxFit.cover)
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest,
+              ),
+              child: Center(
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    fontSize: 96,
+                    fontWeight: FontWeight.w900,
+                    color: scheme.primary.withValues(alpha: 0.18),
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+          // Dark gradient — covers bottom ~45% for text legibility.
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.45, 1.0],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.68),
+                  ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            profile.displayName,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 6),
-          // MMR badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bar_chart_rounded,
-                    size: 14, color: scheme.primary),
-                const SizedBox(width: 4),
-                Text(
-                  '${profile.mmr} MMR',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w600,
+          // Name / MMR / You — anchored to the bottom.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    profile.displayName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  // MMR badge — dark pill with white text.
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.bar_chart_rounded,
+                            size: 14, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${profile.mmr} MMR',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'You',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.75),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'You',
-            style: theme.textTheme.labelSmall
-                ?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -211,36 +249,35 @@ class _PartnerSlot extends StatelessWidget {
     final scheme = theme.colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(kRadius),
-        border: Border.all(
-          color: scheme.outlineVariant,
-          width: 1.5,
-          strokeAlign: BorderSide.strokeAlignInside,
-        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.person_add_outlined,
-              size: 52, color: scheme.onSurfaceVariant.withValues(alpha: 0.5)),
+          Icon(
+            Icons.person_add_outlined,
+            size: 48,
+            color: scheme.onSurfaceVariant.withValues(alpha: 0.45),
+          ),
           const SizedBox(height: 12),
           Text(
             'Invite partner',
             style: theme.textTheme.titleSmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: scheme.outlineVariant.withValues(alpha: 0.3),
+              border: Border.all(color: scheme.outlineVariant),
               borderRadius: BorderRadius.circular(100),
             ),
             child: Text(
-              'Coming soon',
+              'COMING SOON',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                letterSpacing: 0.5,
               ),
             ),
           ),
