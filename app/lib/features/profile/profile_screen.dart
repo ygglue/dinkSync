@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme.dart';
 import '../../data/capabilities.dart';
 import '../../data/supabase_client.dart';
 import 'appearance_selector.dart';
@@ -31,7 +30,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _loading = true;
   bool _saving = false;
   String? _error;
-  String _rlsNote = '';
 
   @override
   void initState() {
@@ -69,21 +67,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           .limit(1);
       final p = (rows as List).isEmpty ? null : rows.first;
 
-      // RLS probe: try to read a (almost certainly) non-self id by filtering
-      // on id != uid. With RLS this returns zero rows for other users.
-      final other = await supabase
-          .from('profiles')
-          .select('id, display_name')
-          .neq('id', uid)
-          .limit(1);
-
       setState(() {
         _profile = p;
         _nameCtl.text = (p?['display_name'] as String?) ?? '';
         _avatarCtl.text = (p?['avatar_url'] as String?) ?? '';
-        _rlsNote = (other as List).isEmpty
-            ? 'RLS probe: cannot see other users\' rows. ✓'
-            : 'RLS probe WARNING: saw another user\'s row. ✗';
       });
     } catch (e) {
       setState(() => _error = 'Failed to load profile: $e');
@@ -143,6 +130,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Text(
           'Profile',
           style: theme.textTheme.titleLarge?.copyWith(
@@ -150,18 +138,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             color: scheme.primary,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: _loading ? null : _loadProfile,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reload',
-          ),
-        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+          : RefreshIndicator(
+              onRefresh: _loadProfile,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -300,59 +284,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 28),
                   const AppearanceSelector(),
 
-                  const SizedBox(height: 28),
-                  // RLS probe result — visible so the Phase 0 demo is explicit.
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest
-                          .withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(kRadius),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: scheme.surface,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(Icons.lock_outline,
-                              size: 18, color: scheme.primary),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'SECURITY ACCESS',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: scheme.outline,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.0,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _rlsNote,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
+          ),
     );
   }
 }
+
 
 /// Small rounded badge for a stat (e.g. "MMR 1050") or role (e.g. "Admin").
 /// [tinted] gives it a green-tinted background; otherwise it's neutral.

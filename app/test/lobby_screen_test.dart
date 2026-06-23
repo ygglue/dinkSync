@@ -61,7 +61,7 @@ void main() {
     expect(find.text('Select a court'), findsOneWidget);
   });
 
-  testWidgets('"Book a Court" disabled when no court selected', (tester) async {
+  testWidgets('"Book a Slot" disabled when no court selected', (tester) async {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
 
@@ -69,7 +69,7 @@ void main() {
     expect(btn.onPressed, isNull);
   });
 
-  testWidgets('"Book a Court" disabled when court has no customFeeCents',
+  testWidgets('"Book a Slot" disabled when court has no customFeeCents',
       (tester) async {
     await tester.pumpWidget(host(preselected: _courtNoFee));
     await tester.pumpAndSettle();
@@ -78,7 +78,7 @@ void main() {
     expect(btn.onPressed, isNull);
   });
 
-  testWidgets('"Book a Court" enabled when court has customFeeCents',
+  testWidgets('"Book a Slot" enabled when court has customFeeCents',
       (tester) async {
     await tester.pumpWidget(host(preselected: _courtWithFee));
     await tester.pumpAndSettle();

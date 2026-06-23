@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dinksync/data/court.dart';
 import 'package:dinksync/features/lobby/booking_repository.dart';
-import 'package:dinksync/features/lobby/court_booking_screen.dart';
+import 'package:dinksync/features/lobby/book_slot_sheet.dart';
 
 const _court = Court(
   id: 'c1',
@@ -36,6 +36,12 @@ class _FakeBookingRepo implements BookingRepository {
     required DateTime startsAt,
     required DateTime endsAt,
   }) async {}
+
+  @override
+  Future<void> cancelBooking(String bookingId) async {}
+
+  @override
+  Future<List<CustomBooking>> myUpcomingBookings() async => [];
 }
 
 Widget _host({List<CustomBooking> bookings = const []}) => ProviderScope(
@@ -45,86 +51,85 @@ Widget _host({List<CustomBooking> bookings = const []}) => ProviderScope(
         ),
       ],
       child: const MaterialApp(
-        home: CourtBookingScreen(court: _court),
+        home: Scaffold(body: BookSlotSheet(court: _court)),
       ),
     );
 
 void main() {
-  testWidgets('day strip shows today label', (tester) async {
+  testWidgets('date strip shows today', (tester) async {
     await tester.pumpWidget(_host());
     await tester.pumpAndSettle();
 
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final now = DateTime.now();
-    final todayLabel = '${weekdays[now.weekday - 1]} ${now.day}';
-    expect(find.text(todayLabel), findsOneWidget);
+    expect(find.text(weekdays[now.weekday - 1]), findsWidgets);
+    expect(find.text('${now.day}'), findsWidgets);
   });
 
-  testWidgets('Confirm booking button is disabled with no selection',
+  testWidgets('shows section labels', (tester) async {
+    await tester.pumpWidget(_host());
+    await tester.pumpAndSettle();
+
+    expect(find.text('SELECT DATE'), findsOneWidget);
+    expect(find.text('START TIME'), findsOneWidget);
+    expect(find.text('DURATION'), findsOneWidget);
+  });
+
+  testWidgets('shows default start time and duration chips', (tester) async {
+    await tester.pumpWidget(_host());
+    await tester.pumpAndSettle();
+
+    // Default start is 8:00 AM.
+    expect(find.text('8:00 AM'), findsWidgets);
+    // Duration chip row should be visible.
+    expect(find.text('1h'), findsOneWidget);
+    expect(find.text('2h'), findsOneWidget);
+  });
+
+  testWidgets('Confirm slot button is enabled with valid selection',
       (tester) async {
     await tester.pumpWidget(_host());
+    await tester.pumpAndSettle();
+
+    final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(btn.onPressed, isNotNull);
+  });
+
+  testWidgets('Confirm slot button is disabled when all times are booked',
+      (tester) async {
+    final now = DateTime.now();
+    // Block the entire bookable window (6:00 AM to 10:00 PM).
+    final booking = CustomBooking(
+      startsAt: DateTime(now.year, now.month, now.day, 6, 0),
+      endsAt: DateTime(now.year, now.month, now.day, 22, 0),
+    );
+    await tester.pumpWidget(_host(bookings: [booking]));
     await tester.pumpAndSettle();
 
     final btn = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(btn.onPressed, isNull);
   });
 
-  testWidgets('tapping an available block selects start + end',
-      (tester) async {
+  testWidgets('tapping a different date chip resets start time', (tester) async {
     await tester.pumpWidget(_host());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('08:00'));
-    await tester.pump();
-
-    expect(find.textContaining('08:00–09:00'), findsOneWidget);
-  });
-
-  testWidgets('tapping second block extends range', (tester) async {
-    await tester.pumpWidget(_host());
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    await tester.tap(find.text('${tomorrow.day}').first);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('08:00'));
-    await tester.pump();
-    await tester.tap(find.text('10:00'));
-    await tester.pump();
-
-    expect(find.textContaining('08:00–11:00'), findsOneWidget);
-  });
-
-  testWidgets('summary shows fee for selected range', (tester) async {
-    await tester.pumpWidget(_host());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('08:00'));
-    await tester.pump();
-    await tester.tap(find.text('10:00'));
-    await tester.pump();
-
-    // 3 hours × ₱500 = ₱1500
-    expect(find.textContaining('₱1500'), findsOneWidget);
-  });
-
-  testWidgets('booked block shows Booked label', (tester) async {
-    final now = DateTime.now();
-    final booking = CustomBooking(
-      startsAt: DateTime(now.year, now.month, now.day, 10),
-      endsAt: DateTime(now.year, now.month, now.day, 11),
-    );
-    await tester.pumpWidget(_host(bookings: [booking]));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Booked'), findsOneWidget);
-  });
-
-  testWidgets('Confirm button enabled after selection', (tester) async {
-    await tester.pumpWidget(_host());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('09:00'));
-    await tester.pump();
-
+    // After date change, auto-selection should re-pick a time.
     final btn = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(btn.onPressed, isNotNull);
+  });
+
+  test('timeLabel formats times correctly', () {
+    expect(BookSlotSheet.timeLabel(0), '12:00 AM');
+    expect(BookSlotSheet.timeLabel(480), '8:00 AM');
+    expect(BookSlotSheet.timeLabel(510), '8:30 AM');
+    expect(BookSlotSheet.timeLabel(720), '12:00 PM');
+    expect(BookSlotSheet.timeLabel(750), '12:30 PM');
+    expect(BookSlotSheet.timeLabel(780), '1:00 PM');
+    expect(BookSlotSheet.timeLabel(1260), '9:00 PM');
   });
 }

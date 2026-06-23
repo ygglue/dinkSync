@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../data/app_mode.dart';
 import '../../data/court.dart';
 import '../discovery/discovery_repository.dart';
+import 'book_slot_sheet.dart';
 import 'booking_repository.dart';
 
 const _kLastCourtKey = 'lobby_last_court_id';
@@ -26,19 +27,8 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedCourtId = widget.initialCourt?.id;
-    if (_selectedCourtId == null) {
-      Future.microtask(_restoreLastCourt);
-    }
-  }
-
-  void _restoreLastCourt() {
-    if (!mounted) return;
-    final savedId =
-        ref.read(sharedPreferencesProvider).getString(_kLastCourtKey);
-    if (savedId != null && mounted) {
-      setState(() => _selectedCourtId = savedId);
-    }
+    _selectedCourtId = widget.initialCourt?.id
+        ?? ref.read(sharedPreferencesProvider).getString(_kLastCourtKey);
   }
 
   Future<void> _pickCourt() async {
@@ -65,8 +55,9 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     final canBook =
         selectedCourt != null && selectedCourt.customFeeCents != null;
 
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset + 92),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -119,35 +110,51 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
           ),
           const SizedBox(height: 16),
           // Find Match — primary CTA.
-          FilledButton(
-            onPressed: null,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(68),
-              textStyle: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
+          SizedBox(
+            height: 80,
+            child: FilledButton(
+              onPressed: null,
+              style: FilledButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                textStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                ),
               ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.sports_tennis, size: 20),
-                SizedBox(width: 10),
-                Text('Find Match'),
-              ],
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.sports_tennis, size: 20),
+                  SizedBox(width: 10),
+                  Text('Find Match'),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 10),
-          // Book a Court — secondary CTA.
-          OutlinedButton(
-            onPressed: canBook
-                ? () => context.push('/play/custom', extra: selectedCourt)
-                : null,
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
+          // Book a Slot — secondary CTA.
+          SizedBox(
+            height: 60,
+            child: OutlinedButton(
+              onPressed: canBook
+                  ? () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final label =
+                          await BookSlotSheet.show(context, selectedCourt);
+                      if (label != null && mounted) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                              content: Text('Booked! See you on $label.')),
+                        );
+                      }
+                    }
+                  : null,
+              style: OutlinedButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text('Book a Slot'),
             ),
-            child: const Text('Book a Court'),
           ),
         ],
       ),

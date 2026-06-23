@@ -5,7 +5,7 @@ import '../../data/app_mode.dart';
 import 'floating_nav_bar.dart';
 import 'mode_dropdown.dart';
 
-/// Bottom-nav scaffold for Court Management mode: Dashboard / Staff / Profile.
+/// Bottom-nav scaffold for Court Management mode: Dashboard / Bookings / Profile.
 /// Profile is the one tab shared with the Play shell.
 class ManageShell extends StatelessWidget {
   const ManageShell({super.key, required this.navigationShell});
@@ -52,8 +52,8 @@ class ManageShell extends StatelessWidget {
                   selectedIcon: Icon(Icons.dashboard),
                 ),
                 FloatingNavDestination(
-                  icon: Icon(Icons.group_outlined),
-                  selectedIcon: Icon(Icons.group),
+                  icon: Icon(Icons.calendar_month_outlined),
+                  selectedIcon: Icon(Icons.calendar_month),
                 ),
                 FloatingNavDestination(
                   icon: Icon(Icons.person_outline),

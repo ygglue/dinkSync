@@ -10,9 +10,24 @@ class CourtSlot {
 }
 
 class CustomBooking {
-  const CustomBooking({required this.startsAt, required this.endsAt});
+  const CustomBooking({
+    this.id,
+    required this.startsAt,
+    required this.endsAt,
+    this.status = 'confirmed',
+    this.amountCents,
+    this.currency,
+    this.courtName,
+    this.slotLabel,
+  });
+  final String? id;
   final DateTime startsAt;
   final DateTime endsAt;
+  final String status;
+  final int? amountCents;
+  final String? currency;
+  final String? courtName;
+  final String? slotLabel;
 }
 
 /// Used as a Riverpod family arg — must implement == and hashCode.
@@ -40,6 +55,8 @@ abstract class BookingRepository {
     required DateTime startsAt,
     required DateTime endsAt,
   });
+  Future<void> cancelBooking(String bookingId);
+  Future<List<CustomBooking>> myUpcomingBookings();
 }
 
 class SupabaseBookingRepository implements BookingRepository {
@@ -64,15 +81,19 @@ class SupabaseBookingRepository implements BookingRepository {
     final nextDay = d.add(const Duration(days: 1));
     final rows = await _db
         .from('custom_bookings')
-        .select('starts_at, ends_at')
+        .select('id, starts_at, ends_at, status, amount_cents, currency')
         .eq('court_slot_id', query.slotId)
         .eq('status', 'confirmed')
         .gte('starts_at', d.toUtc().toIso8601String())
         .lt('starts_at', nextDay.toUtc().toIso8601String());
     return rows
         .map((r) => CustomBooking(
+              id: r['id'] as String,
               startsAt: DateTime.parse(r['starts_at'] as String).toLocal(),
               endsAt: DateTime.parse(r['ends_at'] as String).toLocal(),
+              status: r['status'] as String,
+              amountCents: r['amount_cents'] as int?,
+              currency: r['currency'] as String?,
             ))
         .toList();
   }
@@ -89,6 +110,36 @@ class SupabaseBookingRepository implements BookingRepository {
       'p_ends_at': endsAt.toUtc().toIso8601String(),
     });
   }
+
+  @override
+  Future<void> cancelBooking(String bookingId) async {
+    await _db.rpc('cancel_custom_booking', params: {
+      'p_booking_id': bookingId,
+    });
+  }
+
+  @override
+  Future<List<CustomBooking>> myUpcomingBookings() async {
+    final uid = _db.auth.currentUser?.id;
+    if (uid == null) return [];
+    final rows = await _db
+        .from('custom_bookings')
+        .select('id, starts_at, ends_at, status, amount_cents, currency, courts(name), court_slots(label)')
+        .eq('booker_profile_id', uid)
+        .eq('status', 'confirmed')
+        .gte('starts_at', DateTime.now().toUtc().toIso8601String())
+        .order('starts_at');
+    return rows.map((r) => CustomBooking(
+          id: r['id'] as String,
+          startsAt: DateTime.parse(r['starts_at'] as String).toLocal(),
+          endsAt: DateTime.parse(r['ends_at'] as String).toLocal(),
+          status: r['status'] as String,
+          amountCents: r['amount_cents'] as int?,
+          currency: r['currency'] as String?,
+          courtName: (r['courts'] as Map?)?['name'] as String?,
+          slotLabel: (r['court_slots'] as Map?)?['label'] as String?,
+        )).toList();
+  }
 }
 
 final bookingRepositoryProvider = Provider<BookingRepository>(
@@ -103,6 +154,10 @@ final courtSlotsProvider =
 final courtBookingsProvider =
     FutureProvider.family<List<CustomBooking>, CourtBookingQuery>((ref, query) {
   return ref.watch(bookingRepositoryProvider).bookingsForSlot(query);
+});
+
+final myBookingsProvider = FutureProvider<List<CustomBooking>>((ref) {
+  return ref.watch(bookingRepositoryProvider).myUpcomingBookings();
 });
 
 class LobbyProfile {

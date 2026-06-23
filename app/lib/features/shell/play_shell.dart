@@ -55,6 +55,10 @@ class PlayShell extends StatelessWidget {
                   selectedIcon: Icon(Icons.groups),
                 ),
                 FloatingNavDestination(
+                  icon: Icon(Icons.calendar_month_outlined),
+                  selectedIcon: Icon(Icons.calendar_month),
+                ),
+                FloatingNavDestination(
                   icon: Icon(Icons.person_outline),
                   selectedIcon: Icon(Icons.person),
                 ),

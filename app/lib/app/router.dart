@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_mode.dart';
 import '../data/capabilities.dart';
-import '../data/court.dart'; // ignore: unnecessary_import — direct import for robustness over re-export
 import '../data/supabase_client.dart';
 import '../features/auth/auth_screen.dart';
 import '../features/owner/court_edit_screen.dart';
@@ -18,9 +17,10 @@ import '../features/owner/subscription_screen.dart';
 import '../features/discovery/court_detail_screen.dart';
 import '../features/discovery/discovery_repository.dart';
 import '../features/discovery/court_picker_screen.dart';
-import '../features/lobby/court_booking_screen.dart';
 import '../features/lobby/lobby_screen.dart';
+import '../features/owner/bookings_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/schedule/schedule_screen.dart';
 import '../features/shell/launch_screen.dart';
 import '../features/shell/manage_shell.dart';
 import '../features/shell/placeholder_tab.dart';
@@ -50,7 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/auth', builder: (c, s) => const AuthScreen()),
       GoRoute(path: '/', builder: (c, s) => const LaunchScreen()),
 
-      // Play shell — bottom nav: Play / Social / Profile.
+      // Play shell — bottom nav: Play / Social / Schedule / Profile.
       StatefulShellRoute.indexedStack(
         builder: (c, s, navShell) => PlayShell(navigationShell: navShell),
         branches: [
@@ -68,6 +68,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ]),
           StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/schedule',
+              builder: (c, s) => const ScheduleScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
             GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
           ]),
         ],
@@ -82,12 +88,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/manage/staff',
-              builder: (c, s) => const PlaceholderTab(
-                title: 'Staff',
-                icon: Icons.group,
-                message: 'Staff management is coming soon.',
-              ),
+              path: '/manage/bookings',
+              builder: (c, s) => const BookingsScreen(),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -124,11 +126,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/play/courts',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (c, s) => const CourtPickerScreen(),
-      ),
-      GoRoute(
-        path: '/play/custom',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (c, s) => CourtBookingScreen(court: s.extra as Court),
       ),
     ],
   );

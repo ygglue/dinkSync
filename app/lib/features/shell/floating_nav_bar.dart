@@ -29,7 +29,7 @@ class FloatingNavBar extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).padding.bottom;
     return Padding(
-      padding: EdgeInsets.fromLTRB(24, 0, 24, bottomInset + 16),
+      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomInset + 16),
       child: Material(
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(100),
