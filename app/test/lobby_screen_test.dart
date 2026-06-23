@@ -27,8 +27,10 @@ const _courtWithFee = Court(
 
 Widget _host({Court? preselected}) => ProviderScope(
       overrides: [
-        currentUserDisplayNameProvider
-            .overrideWith((ref) async => 'Test Player'),
+        currentUserProfileProvider.overrideWith(
+          (ref) async =>
+              const LobbyProfile(displayName: 'Test Player', mmr: 1200),
+        ),
       ],
       child: MaterialApp(
         home: Scaffold(
