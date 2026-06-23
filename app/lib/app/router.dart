@@ -16,6 +16,7 @@ import '../features/owner/court_repository.dart';
 import '../features/owner/management_screen.dart';
 import '../features/owner/subscription_screen.dart';
 import '../features/discovery/court_detail_screen.dart';
+import '../features/discovery/discovery_repository.dart';
 import '../features/discovery/court_picker_screen.dart';
 import '../features/lobby/court_booking_screen.dart';
 import '../features/lobby/lobby_screen.dart';
@@ -204,6 +205,8 @@ class _EditRoute extends ConsumerWidget {
           court: court,
           onSaved: () {
             ref.invalidate(ownerCourtProvider);
+            ref.invalidate(activeCourtsProvider);
+            ref.invalidate(courtByIdProvider(court.id));
             _backToManage(context);
           },
         );

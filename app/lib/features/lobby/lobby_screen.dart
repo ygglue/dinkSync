@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../data/app_mode.dart';
 import '../../data/court.dart';
+import '../discovery/discovery_repository.dart';
 import 'booking_repository.dart';
+
+const _kLastCourtKey = 'lobby_last_court_id';
 
 /// Body of the Play shell's first tab: the game lobby.
 /// Body-only — PlayShell supplies the AppBar and floating nav.
@@ -17,17 +21,32 @@ class LobbyScreen extends ConsumerStatefulWidget {
 }
 
 class _LobbyScreenState extends ConsumerState<LobbyScreen> {
-  Court? _selectedCourt;
+  String? _selectedCourtId;
 
   @override
   void initState() {
     super.initState();
-    _selectedCourt = widget.initialCourt;
+    _selectedCourtId = widget.initialCourt?.id;
+    if (_selectedCourtId == null) {
+      Future.microtask(_restoreLastCourt);
+    }
+  }
+
+  void _restoreLastCourt() {
+    if (!mounted) return;
+    final savedId =
+        ref.read(sharedPreferencesProvider).getString(_kLastCourtKey);
+    if (savedId != null && mounted) {
+      setState(() => _selectedCourtId = savedId);
+    }
   }
 
   Future<void> _pickCourt() async {
     final court = await context.push<Court>('/play/courts');
-    if (court != null && mounted) setState(() => _selectedCourt = court);
+    if (court != null && mounted) {
+      ref.read(sharedPreferencesProvider).setString(_kLastCourtKey, court.id);
+      setState(() => _selectedCourtId = court.id);
+    }
   }
 
   @override
@@ -37,8 +56,14 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     final profileAsync = ref.watch(currentUserProfileProvider);
     final profile = profileAsync.valueOrNull ??
         const LobbyProfile(displayName: 'Player', mmr: 1000);
+
+    // Always watch live data so edits in Manage mode are reflected instantly.
+    final selectedCourt = _selectedCourtId != null
+        ? ref.watch(courtByIdProvider(_selectedCourtId!)).valueOrNull
+        : null;
+
     final canBook =
-        _selectedCourt != null && _selectedCourt!.customFeeCents != null;
+        selectedCourt != null && selectedCourt.customFeeCents != null;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -58,16 +83,16 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                   children: [
                     Icon(
                       Icons.stadium_outlined,
-                      color: _selectedCourt != null
+                      color: selectedCourt != null
                           ? scheme.primary
                           : scheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _selectedCourt?.name ?? 'Select a court',
+                        selectedCourt?.name ?? 'Select a court',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: _selectedCourt != null
+                          color: selectedCourt != null
                               ? scheme.onSurface
                               : scheme.onSurfaceVariant,
                         ),
@@ -117,7 +142,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
           // Book a Court — secondary CTA.
           OutlinedButton(
             onPressed: canBook
-                ? () => context.push('/play/custom', extra: _selectedCourt)
+                ? () => context.push('/play/custom', extra: selectedCourt)
                 : null,
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
