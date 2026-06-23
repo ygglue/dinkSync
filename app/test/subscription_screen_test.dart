@@ -24,14 +24,16 @@ class _FakeRepo implements CourtRepository {
           required int entryFeeCents,
           required String currency,
           required int numCourts,
-          String? address}) async =>
+          String? address,
+          int? customFeeCents}) async =>
       'x';
   @override
   Future<void> updateCourt(
       {required String courtId,
       required String name,
       required int entryFeeCents,
-      String? address}) async {}
+      String? address,
+      int? customFeeCents}) async {}
 }
 
 Widget _host(_FakeRepo repo,

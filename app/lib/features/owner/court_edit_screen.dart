@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'court_repository.dart';
 
-/// Edit a court's name, entry fee, and address (not slot count — that touches
-/// court_slots). Uses the direct `updateCourt` path (allowed by courts_update_owner).
 class CourtEditScreen extends ConsumerStatefulWidget {
   const CourtEditScreen({super.key, required this.court, required this.onSaved});
 
@@ -20,6 +18,10 @@ class _CourtEditScreenState extends ConsumerState<CourtEditScreen> {
       TextEditingController(text: widget.court.name);
   late final TextEditingController _feeCtl = TextEditingController(
       text: (widget.court.entryFeeCents / 100).toStringAsFixed(0));
+  late final TextEditingController _customFeeCtl = TextEditingController(
+      text: widget.court.customFeeCents != null
+          ? (widget.court.customFeeCents! / 100).toStringAsFixed(0)
+          : '');
   late final TextEditingController _addressCtl =
       TextEditingController(text: widget.court.address ?? '');
 
@@ -30,6 +32,7 @@ class _CourtEditScreenState extends ConsumerState<CourtEditScreen> {
   void dispose() {
     _nameCtl.dispose();
     _feeCtl.dispose();
+    _customFeeCtl.dispose();
     _addressCtl.dispose();
     super.dispose();
   }
@@ -41,6 +44,10 @@ class _CourtEditScreenState extends ConsumerState<CourtEditScreen> {
       return;
     }
     final fee = parseAmountToMinor(_feeCtl.text) ?? 0;
+    final rawCustomFee = parseAmountToMinor(_customFeeCtl.text);
+    final customFeeCents =
+        (rawCustomFee != null && rawCustomFee > 0) ? rawCustomFee : null;
+
     setState(() {
       _busy = true;
       _error = null;
@@ -53,8 +60,15 @@ class _CourtEditScreenState extends ConsumerState<CourtEditScreen> {
             address: _addressCtl.text.trim().isEmpty
                 ? null
                 : _addressCtl.text.trim(),
+            customFeeCents: customFeeCents,
           );
-      if (mounted) widget.onSaved();
+      if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        widget.onSaved();
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Court details saved.')),
+        );
+      }
     } catch (_) {
       if (mounted) setState(() => _error = 'Could not save. Try again.');
     } finally {
@@ -65,29 +79,24 @@ class _CourtEditScreenState extends ConsumerState<CourtEditScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final currency = widget.court.currency;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Edit court')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _SectionHeader('Venue', theme),
+            const SizedBox(height: 12),
             TextField(
               controller: _nameCtl,
               enabled: !_busy,
               decoration: const InputDecoration(
                 labelText: 'Court name',
                 prefixIcon: Icon(Icons.stadium_outlined),
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _feeCtl,
-              enabled: !_busy,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Entry fee (PHP)',
-                prefixIcon: Icon(Icons.payments_outlined),
               ),
             ),
             const SizedBox(height: 14),
@@ -99,13 +108,45 @@ class _CourtEditScreenState extends ConsumerState<CourtEditScreen> {
                 prefixIcon: Icon(Icons.location_on_outlined),
               ),
             ),
+            _SectionHeader('Pricing', theme),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _feeCtl,
+              enabled: !_busy,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: 'Entry fee ($currency)',
+                prefixIcon: const Icon(Icons.payments_outlined),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _customFeeCtl,
+              enabled: !_busy,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: 'Private booking rate ($currency/hr)',
+                helperText:
+                    'Enables "Book a Court" for players. Leave blank to disable.',
+                prefixIcon: const Icon(Icons.lock_clock_outlined),
+              ),
+            ),
             if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: theme.colorScheme.error)),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.error_outline, size: 16, color: scheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(_error!,
+                        style: TextStyle(color: scheme.error)),
+                  ),
+                ],
+              ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             FilledButton(
               onPressed: _busy ? null : _save,
               child: _busy
@@ -116,6 +157,26 @@ class _CourtEditScreenState extends ConsumerState<CourtEditScreen> {
                   : const Text('Save changes'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.label, this.theme);
+  final String label;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 0),
+      child: Text(
+        label.toUpperCase(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.primary,
+          letterSpacing: 1.2,
         ),
       ),
     );

@@ -35,6 +35,7 @@ abstract class CourtRepository {
     required String currency,
     required int numCourts,
     String? address,
+    int? customFeeCents,
   });
   Future<void> subscribeCourt({
     required String courtId,
@@ -45,6 +46,7 @@ abstract class CourtRepository {
     required String name,
     required int entryFeeCents,
     String? address,
+    int? customFeeCents,
   });
 }
 
@@ -73,6 +75,7 @@ class SupabaseCourtRepository implements CourtRepository {
     required String currency,
     required int numCourts,
     String? address,
+    int? customFeeCents,
   }) async {
     final id = await _db.rpc('create_court', params: {
       'p_name': name,
@@ -80,6 +83,7 @@ class SupabaseCourtRepository implements CourtRepository {
       'p_currency': currency,
       'p_num_courts': numCourts,
       'p_address': address,
+      'p_custom_fee_cents': customFeeCents,
     });
     return id as String;
   }
@@ -101,11 +105,13 @@ class SupabaseCourtRepository implements CourtRepository {
     required String name,
     required int entryFeeCents,
     String? address,
+    int? customFeeCents,
   }) async {
     await _db.from('courts').update({
       'name': name,
       'entry_fee_cents': entryFeeCents,
       'address': address,
+      'custom_fee_cents': customFeeCents,
     }).eq('id', courtId);
   }
 }

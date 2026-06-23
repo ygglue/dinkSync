@@ -16,12 +16,14 @@ class _FakeRepo implements CourtRepository {
     required String currency,
     required int numCourts,
     String? address,
+    int? customFeeCents,
   }) async {
     createCalls++;
     lastArgs = {
       'name': name,
       'entryFeeCents': entryFeeCents,
       'numCourts': numCourts,
+      'customFeeCents': customFeeCents,
     };
     return 'new-court-id';
   }
@@ -36,7 +38,8 @@ class _FakeRepo implements CourtRepository {
       {required String courtId,
       required String name,
       required int entryFeeCents,
-      String? address}) async {}
+      String? address,
+      int? customFeeCents}) async {}
 }
 
 Widget _host(_FakeRepo repo, {void Function(String)? onCreated}) {
@@ -53,6 +56,7 @@ void main() {
     final repo = _FakeRepo();
     await tester.pumpWidget(_host(repo));
 
+    await tester.ensureVisible(find.text('Create court'));
     await tester.tap(find.text('Create court'));
     await tester.pump();
 
@@ -66,8 +70,8 @@ void main() {
     await tester.pumpWidget(_host(repo, onCreated: (id) => created = id));
 
     await tester.enterText(find.bySemanticsLabel('Court name'), 'Cebu Dinks');
-    await tester.enterText(
-        find.bySemanticsLabel('Entry fee (PHP)'), '50');
+    await tester.enterText(find.bySemanticsLabel('Entry fee (PHP)'), '50');
+    await tester.ensureVisible(find.text('Create court'));
     await tester.tap(find.text('Create court'));
     await tester.pumpAndSettle();
 

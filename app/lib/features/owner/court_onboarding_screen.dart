@@ -16,11 +16,13 @@ class CourtOnboardingScreen extends ConsumerStatefulWidget {
       _CourtOnboardingScreenState();
 }
 
-class _CourtOnboardingScreenState extends ConsumerState<CourtOnboardingScreen> {
+class _CourtOnboardingScreenState
+    extends ConsumerState<CourtOnboardingScreen> {
   final _nameCtl = TextEditingController();
-  final _feeCtl = TextEditingController(text: '0');
-  final _slotsCtl = TextEditingController(text: '1');
   final _addressCtl = TextEditingController();
+  final _feeCtl = TextEditingController();
+  final _customFeeCtl = TextEditingController();
+  final _slotsCtl = TextEditingController(text: '1');
 
   bool _busy = false;
   String? _error;
@@ -28,9 +30,10 @@ class _CourtOnboardingScreenState extends ConsumerState<CourtOnboardingScreen> {
   @override
   void dispose() {
     _nameCtl.dispose();
-    _feeCtl.dispose();
-    _slotsCtl.dispose();
     _addressCtl.dispose();
+    _feeCtl.dispose();
+    _customFeeCtl.dispose();
+    _slotsCtl.dispose();
     super.dispose();
   }
 
@@ -40,12 +43,15 @@ class _CourtOnboardingScreenState extends ConsumerState<CourtOnboardingScreen> {
       setState(() => _error = 'Court name is required');
       return;
     }
-    final fee = parseAmountToMinor(_feeCtl.text) ?? 0;
     final slots = int.tryParse(_slotsCtl.text.trim()) ?? 0;
     if (slots < 1) {
       setState(() => _error = 'Number of courts must be at least 1');
       return;
     }
+    final fee = parseAmountToMinor(_feeCtl.text) ?? 0;
+    final rawCustomFee = parseAmountToMinor(_customFeeCtl.text);
+    final customFeeCents =
+        (rawCustomFee != null && rawCustomFee > 0) ? rawCustomFee : null;
 
     setState(() {
       _busy = true;
@@ -60,6 +66,7 @@ class _CourtOnboardingScreenState extends ConsumerState<CourtOnboardingScreen> {
             address: _addressCtl.text.trim().isEmpty
                 ? null
                 : _addressCtl.text.trim(),
+            customFeeCents: customFeeCents,
           );
       if (mounted) widget.onCreated(id);
     } catch (_) {
@@ -74,45 +81,28 @@ class _CourtOnboardingScreenState extends ConsumerState<CourtOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Set up your court')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Tell us about your venue. You can edit these later.',
+              'Tell us about your venue. You can edit these details later.',
               style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
-            const SizedBox(height: 20),
+            _SectionHeader('Venue', theme),
+            const SizedBox(height: 12),
             TextField(
               controller: _nameCtl,
               enabled: !_busy,
               decoration: const InputDecoration(
                 labelText: 'Court name',
                 prefixIcon: Icon(Icons.stadium_outlined),
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _feeCtl,
-              enabled: !_busy,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Entry fee (PHP)',
-                prefixIcon: Icon(Icons.payments_outlined),
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _slotsCtl,
-              enabled: !_busy,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Number of courts (playing surfaces)',
-                prefixIcon: Icon(Icons.grid_view_outlined),
               ),
             ),
             const SizedBox(height: 14),
@@ -124,13 +114,56 @@ class _CourtOnboardingScreenState extends ConsumerState<CourtOnboardingScreen> {
                 prefixIcon: Icon(Icons.location_on_outlined),
               ),
             ),
+            _SectionHeader('Pricing', theme),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _feeCtl,
+              enabled: !_busy,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Entry fee (PHP)',
+                prefixIcon: Icon(Icons.payments_outlined),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _customFeeCtl,
+              enabled: !_busy,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Private booking rate (PHP/hr)',
+                helperText:
+                    'Enables "Book a Court" for players. Leave blank to disable.',
+                prefixIcon: Icon(Icons.lock_clock_outlined),
+              ),
+            ),
+            _SectionHeader('Capacity', theme),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _slotsCtl,
+              enabled: !_busy,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Number of courts',
+                prefixIcon: Icon(Icons.grid_view_outlined),
+              ),
+            ),
             if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: theme.colorScheme.error)),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.error_outline, size: 16, color: scheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(_error!,
+                        style: TextStyle(color: scheme.error)),
+                  ),
+                ],
+              ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             FilledButton(
               onPressed: _busy ? null : _submit,
               child: _busy
@@ -141,6 +174,26 @@ class _CourtOnboardingScreenState extends ConsumerState<CourtOnboardingScreen> {
                   : const Text('Create court'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.label, this.theme);
+  final String label;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 0),
+      child: Text(
+        label.toUpperCase(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.primary,
+          letterSpacing: 1.2,
         ),
       ),
     );

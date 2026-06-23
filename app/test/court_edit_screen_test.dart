@@ -26,9 +26,15 @@ class _FakeRepo implements CourtRepository {
     required String name,
     required int entryFeeCents,
     String? address,
+    int? customFeeCents,
   }) async {
     updateCalls++;
-    lastArgs = {'courtId': courtId, 'name': name, 'entryFeeCents': entryFeeCents};
+    lastArgs = {
+      'courtId': courtId,
+      'name': name,
+      'entryFeeCents': entryFeeCents,
+      'customFeeCents': customFeeCents,
+    };
   }
 
   @override
@@ -39,7 +45,8 @@ class _FakeRepo implements CourtRepository {
           required int entryFeeCents,
           required String currency,
           required int numCourts,
-          String? address}) async =>
+          String? address,
+          int? customFeeCents}) async =>
       'x';
   @override
   Future<void> subscribeCourt(
