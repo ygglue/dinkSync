@@ -97,7 +97,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
           FilledButton(
             onPressed: null,
             style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(56),
+              minimumSize: const Size.fromHeight(68),
               textStyle: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -113,11 +113,15 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
               ],
             ),
           ),
-          // Book a Court — ghost/text secondary CTA.
-          TextButton(
+          const SizedBox(height: 10),
+          // Book a Court — secondary CTA.
+          OutlinedButton(
             onPressed: canBook
                 ? () => context.push('/play/custom', extra: _selectedCourt)
                 : null,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+            ),
             child: const Text('Book a Court'),
           ),
         ],
@@ -247,42 +251,102 @@ class _PartnerSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(kRadius),
+    return CustomPaint(
+      painter: _DashedRoundedBorder(
+        color: scheme.outlineVariant,
+        radius: kRadius,
+        strokeWidth: 1.5,
+        dashLength: 8,
+        gapLength: 6,
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.person_add_outlined,
-            size: 48,
-            color: scheme.onSurfaceVariant.withValues(alpha: 0.45),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Invite partner',
-            style: theme.textTheme.titleSmall
-                ?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              border: Border.all(color: scheme.outlineVariant),
-              borderRadius: BorderRadius.circular(100),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(kRadius),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.person_add_outlined,
+              size: 48,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.45),
             ),
-            child: Text(
-              'COMING SOON',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                letterSpacing: 0.5,
+            const SizedBox(height: 12),
+            Text(
+              'Invite partner',
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: scheme.outlineVariant),
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Text(
+                'COMING SOON',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+class _DashedRoundedBorder extends CustomPainter {
+  const _DashedRoundedBorder({
+    required this.color,
+    required this.radius,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+  });
+
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rrect);
+
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
+      bool drawing = true;
+      while (distance < metric.length) {
+        final segLen = drawing ? dashLength : gapLength;
+        if (drawing) {
+          canvas.drawPath(
+            metric.extractPath(distance, distance + segLen),
+            paint,
+          );
+        }
+        distance += segLen;
+        drawing = !drawing;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRoundedBorder old) =>
+      color != old.color ||
+      radius != old.radius ||
+      strokeWidth != old.strokeWidth ||
+      dashLength != old.dashLength ||
+      gapLength != old.gapLength;
 }

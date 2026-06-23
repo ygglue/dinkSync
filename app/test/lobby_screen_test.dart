@@ -51,7 +51,7 @@ void main() {
     await tester.pumpWidget(_host());
     await tester.pumpAndSettle();
 
-    final btn = tester.widget<TextButton>(find.byType(TextButton));
+    final btn = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
     expect(btn.onPressed, isNull);
   });
 
@@ -60,7 +60,7 @@ void main() {
     await tester.pumpWidget(_host(preselected: _courtNoFee));
     await tester.pumpAndSettle();
 
-    final btn = tester.widget<TextButton>(find.byType(TextButton));
+    final btn = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
     expect(btn.onPressed, isNull);
   });
 
@@ -69,7 +69,7 @@ void main() {
     await tester.pumpWidget(_host(preselected: _courtWithFee));
     await tester.pumpAndSettle();
 
-    final btn = tester.widget<TextButton>(find.byType(TextButton));
+    final btn = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
     expect(btn.onPressed, isNotNull);
   });
 
