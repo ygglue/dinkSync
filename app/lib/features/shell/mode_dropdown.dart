@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../app/app_icons.dart';
 import '../../data/app_mode.dart';
 import '../../data/capabilities.dart';
 
@@ -14,8 +16,10 @@ class ModeDropdown extends ConsumerWidget {
 
   final void Function(AppMode) onChanged;
 
-  static IconData _icon(AppMode m) =>
-      m == AppMode.management ? Icons.storefront_outlined : Icons.sports_tennis;
+  static Widget _icon(AppMode m, {double? size, Color? color}) =>
+      m == AppMode.management
+          ? Icon(PhosphorIconsFill.storefront, size: size, color: color)
+          : AppIcon(AppIcons.pickleballPaddle, size: size, color: color);
 
   /// Compact label for the top-bar trigger.
   static String _shortLabel(AppMode m) =>
@@ -46,7 +50,7 @@ class ModeDropdown extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(_icon(mode), size: 22, color: scheme.primary),
+            _icon(mode, size: 22, color: scheme.primary),
             const SizedBox(width: 6),
             Text(
               _shortLabel(mode),
@@ -56,8 +60,7 @@ class ModeDropdown extends ConsumerWidget {
                 color: scheme.primary,
               ),
             ),
-            Icon(Icons.keyboard_arrow_down_rounded,
-                size: 22, color: scheme.primary),
+            Icon(PhosphorIconsFill.caretDown, size: 22, color: scheme.primary),
           ],
         ),
       ),
@@ -150,8 +153,7 @@ class _ModeRow extends StatelessWidget {
                 color: scheme.primary.withValues(alpha: 0.10),
               ),
               alignment: Alignment.center,
-              child: Icon(ModeDropdown._icon(mode),
-                  size: 22, color: scheme.primary),
+              child: ModeDropdown._icon(mode, size: 22, color: scheme.primary),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -174,7 +176,9 @@ class _ModeRow extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Icon(
-              selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+              selected
+                  ? PhosphorIconsFill.checkCircle
+                  : PhosphorIconsFill.circle,
               color: selected ? scheme.primary : scheme.outlineVariant,
             ),
           ],

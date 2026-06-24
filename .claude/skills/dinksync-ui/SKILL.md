@@ -43,17 +43,15 @@ Verify your `colorScheme` output against these; don't paste hex into widgets.
 | Muted text / idle icon | `#64748B` | `#BFCABA` | `onSurfaceVariant` |
 | **Accent** (links, focus, key icons, headline) | `#2E7D32` | `#88D982` | `primary` |
 | **Brand button fill** (see note) | `#2E7D32` | `#2E7D32` | `kBrandGreen` constant |
+| **Accent pill background** | `#232821` | `#232821` | hardcoded (see note) |
 | Error | M3 error | `#FFB4AB` | `error` |
 
 \* Flutter's default filled-input fill is `surfaceContainerHighest`; set
 `fillColor` explicitly if you want the lighter `surfaceContainerLow` look.
 
-**The one deliberate exception — primary buttons stay deep green in BOTH modes.**
-In dark mode `colorScheme.primary` is the *pale* green `#88D982`; a pale filled
-button looks wrong. Stitch's dark variant fills the primary button with the deep
-`#2E7D32` (= `primaryContainer`) + white text. So: filled CTAs and the selected
-toggle segment use a fixed `kBrandGreen = Color(0xFF2E7D32)` with white text,
-not `colorScheme.primary`. Everything else uses the scheme.
+**Two approved hardcoded colors (both mode-invariant by design):**
+1. `kBrandGreen = Color(0xFF2E7D32)` — filled CTAs / selected toggle segments only.
+2. `Color(0xFF232821)` — dark accent pill backgrounds (date, duration, fee, MMR, status badges). Always paired with `Border.all(color: scheme.primary, width: 1)` and white/primary text. Everything else uses the scheme.
 
 ## Typography
 
@@ -80,27 +78,27 @@ Reuse the implementations already in the codebase rather than reinventing:
 | Component | Recipe / where it lives |
 |---|---|
 | **Scaffold** | `scaffoldBackgroundColor: colorScheme.surface`; flat `AppBar` with transparent surfaceTint, title in `primary` bold. See [theme.dart](../../../app/lib/app/theme.dart). |
+| **Surface card** | `surfaceContainerHighest` fill, `kRadius` (24px) corners, `clipBehavior: Clip.antiAlias`, radial glow from upper-left (see below). See [schedule_screen.dart](../../../app/lib/features/schedule/schedule_screen.dart). |
+| **Radial glow** | `Positioned.fill` + `DecoratedBox(RadialGradient(center: Alignment.topLeft, radius: 1.4, colors: [scheme.primary.withValues(alpha: 0.22), transparent]))` as first child of a `Stack` inside a clipped container. Strength 0.12 for subtler contexts (profile card, partner slot). |
+| **Accent pill** | `Container` with `color: Color(0xFF232821)`, `BorderRadius.circular(999)`, `Border.all(color: scheme.primary, width: 1)`. Icon and text in `scheme.primary`. Used for date, duration, fee, MMR badge, status labels. |
+| **Inner gradient card** | Light `LinearGradient(begin: bottomLeft, end: topRight, colors: [Color(0xFFCFE8C4), Color(0xFFF8F3EA)])`, `BorderRadius.circular(20)`. Always light — fixed colors by design. Used for the time block in schedule cards. |
 | **Brand header** | Paddle `Icon` in a `primary`-at-10% rounded-24 tile → "dinkSync" `headlineMedium` bold `primary` → tagline `bodyMedium` `onSurfaceVariant`. See [auth_screen.dart](../../../app/lib/features/auth/auth_screen.dart). |
 | **Pill toggle** | `_PillToggle` in [auth_screen.dart](../../../app/lib/features/auth/auth_screen.dart): neutral track, selected segment filled `kBrandGreen` + white, `AnimatedContainer`. |
 | **Tonal input** | `InputDecoration` filled, leading icon, floating label, rounded-24, no border in light / `outlineVariant` border in dark, `primary` focus. Themed once in `inputDecorationTheme`. |
 | **Primary button** | `FilledButton`, full-width, ≥48px, rounded-24, `kBrandGreen` bg + white, Plus Jakarta w600. |
-| **Secondary button** | `OutlinedButton`(`.icon`), full-width, `outlineVariant` border, `onSurface` text. Used for "Continue with Google" / "Sign out". |
-| **Google button** | `OutlinedButton.icon` with `_GoogleLogo` ("G" in `#4285F4`) in [auth_screen.dart](../../../app/lib/features/auth/auth_screen.dart). |
-| **OR divider** | `_OrDivider` in [auth_screen.dart](../../../app/lib/features/auth/auth_screen.dart). |
-| **Stat / role chip** | `_StatChip` in [profile_screen.dart](../../../app/lib/features/profile/profile_screen.dart): fully-round pill, green-tinted or neutral, icon + label. |
+| **Secondary button** | `OutlinedButton`(`.icon`), full-width, `outlineVariant` border, `onSurface` text. |
 | **Avatar** | Circle `primary`-at-10%, initial in `primary`, optional green edit badge. See [profile_screen.dart](../../../app/lib/features/profile/profile_screen.dart). |
-| **Info / RLS card** | Tonal `surfaceContainerHighest` fill, rounded-24, small icon tile + uppercase label + `bodySmall` body. See [profile_screen.dart](../../../app/lib/features/profile/profile_screen.dart). |
+| **Player trading card** | `scheme.surface` fill + primary border (0.28 alpha, 1.5px) + green box shadow + radial glow + gradient green header. See [profile_screen.dart](../../../app/lib/features/profile/profile_screen.dart). |
 
 ## Common mistakes
 
-- **Hardcoding hex in a widget.** Use `colorScheme.*` so dark mode works. The
-  only literal color allowed is `kBrandGreen` for filled CTAs / selected segments.
-- **Using `colorScheme.primary` for a filled button.** It goes pale in dark —
-  use `kBrandGreen` + white text instead.
+- **Hardcoding hex in a widget.** Only two literals are permitted: `kBrandGreen` (filled CTAs) and `Color(0xFF232821)` (accent pill backgrounds). Everything else uses `colorScheme.*`.
+- **Using `colorScheme.primary` for a filled button.** It goes pale in dark — use `kBrandGreen` + white text instead.
 - **`withOpacity` (deprecated).** Use `color.withValues(alpha: 0.1)`.
-- **Wrong radius.** Rounded system = 24px for boxes; chips/avatar/toggle = fully round.
-- **Flooding green.** It's an accent — buttons, active states, key icons only;
-  never large background fills.
+- **Wrong radius.** Rounded system = 24px for boxes; chips/avatar/toggle = fully round (`BorderRadius.circular(999)`).
+- **Flooding green.** It's an accent — buttons, active states, key icons only; never large background fills.
+- **Forgetting `clipBehavior: Clip.antiAlias`** on any container that hosts a radial glow — without it the glow bleeds outside the rounded corners.
+- **Using `Divider` inside a `Row`.** It won't center. Use `Container(height: 1.5, color: ...)` for horizontal lines inside rows.
 - **Calling `GoogleFonts` in a screen.** Fonts are set once in the theme.
 - **Dropping `kDebugMode` gating** when copying the auth screen's dev-login panel.
 

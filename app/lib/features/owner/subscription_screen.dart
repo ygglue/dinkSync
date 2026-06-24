@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../app/theme.dart';
 import 'court_repository.dart';
@@ -70,8 +71,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         ),
         child: Row(
           children: [
-            Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? scheme.primary : scheme.onSurfaceVariant),
+            Icon(
+              selected
+                  ? PhosphorIconsFill.radioButton
+                  : PhosphorIconsRegular.radioButton,
+              color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

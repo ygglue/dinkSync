@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../lobby/book_slot_sheet.dart' show BookSlotSheet;
 import '../lobby/booking_repository.dart';
@@ -94,7 +95,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left),
+                    icon: Icon(PhosphorIconsFill.caretLeft),
                     onPressed: () => setState(() => _selectedDay =
                         _selectedDay.subtract(const Duration(days: 1))),
                   ),
@@ -117,7 +118,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right),
+                    icon: Icon(PhosphorIconsFill.caretRight),
                     onPressed: () => setState(() => _selectedDay =
                         _selectedDay.add(const Duration(days: 1))),
                   ),
@@ -447,7 +448,7 @@ class _BookingDetailSheet extends StatelessWidget {
             const SizedBox(height: 20),
 
             _DetailRow(
-              icon: Icons.access_time_outlined,
+              icon: PhosphorIconsFill.clock,
               label: '${BookSlotSheet.timeLabel(startMins)} – '
                   '${BookSlotSheet.timeLabel(endMins)}',
               sublabel: durationLabel,
@@ -458,7 +459,7 @@ class _BookingDetailSheet extends StatelessWidget {
             if (b.amountCents != null && b.currency != null) ...[
               const SizedBox(height: 12),
               _DetailRow(
-                icon: Icons.payments_outlined,
+                icon: PhosphorIconsFill.currencyDollar,
                 label: BookSlotSheet.feeLabel(b.amountCents!, b.currency!),
                 sublabel: 'Amount paid',
                 scheme: scheme,

@@ -126,7 +126,7 @@ dinkSync/
 │   │   ├── main.dart              ← Entry: load .env, init Supabase, run app
 │   │   ├── app/
 │   │   │   ├── router.dart        ← GoRouter: /auth, /profile, auth-aware redirect
-│   │   │   └── theme.dart         ← Material 3 court-green theme (seed #2E7D32)
+│   │   │   └── theme.dart         ← Material 3 neon-lime theme (seed #76FF03, vibrant variant)
 │   │   ├── config/
 │   │   │   └── app_config.dart    ← .env loader, AppConfigError
 │   │   ├── data/

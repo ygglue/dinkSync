@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../data/app_mode.dart';
 import 'floating_nav_bar.dart';
@@ -46,18 +47,18 @@ class ManageShell extends StatelessWidget {
                 i,
                 initialLocation: i == navigationShell.currentIndex,
               ),
-              destinations: const [
+              destinations: [
                 FloatingNavDestination(
-                  icon: Icon(Icons.dashboard_outlined),
-                  selectedIcon: Icon(Icons.dashboard),
+                  icon: Icon(PhosphorIconsFill.squaresFour),
+                  selectedIcon: Icon(PhosphorIconsFill.squaresFour),
                 ),
                 FloatingNavDestination(
-                  icon: Icon(Icons.calendar_month_outlined),
-                  selectedIcon: Icon(Icons.calendar_month),
+                  icon: Icon(PhosphorIconsFill.calendarBlank),
+                  selectedIcon: Icon(PhosphorIconsFill.calendarBlank),
                 ),
                 FloatingNavDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
+                  icon: Icon(PhosphorIconsFill.user),
+                  selectedIcon: Icon(PhosphorIconsFill.user),
                 ),
               ],
             ),

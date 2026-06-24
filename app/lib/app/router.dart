@@ -19,12 +19,13 @@ import '../features/discovery/discovery_repository.dart';
 import '../features/discovery/court_picker_screen.dart';
 import '../features/lobby/lobby_screen.dart';
 import '../features/owner/bookings_screen.dart';
+import '../features/profile/player_profile_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/schedule/schedule_screen.dart';
 import '../features/shell/launch_screen.dart';
 import '../features/shell/manage_shell.dart';
-import '../features/shell/placeholder_tab.dart';
 import '../features/shell/play_shell.dart';
+import '../features/social/social_screen.dart';
 
 /// Where a signed-in user should land on launch, given their role + last mode.
 String launchTarget({required bool isManager, required AppMode mode}) {
@@ -60,11 +61,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/social',
-              builder: (c, s) => const PlaceholderTab(
-                title: 'Social',
-                icon: Icons.groups,
-                message: 'Friends and activity are coming soon.',
-              ),
+              builder: (c, s) => const SocialScreen(),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -121,6 +118,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/play/court/:id',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (c, s) => CourtDetailScreen(courtId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/play/player/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (c, s) => PlayerProfileScreen(profileId: s.pathParameters['id']!),
       ),
       GoRoute(
         path: '/play/courts',

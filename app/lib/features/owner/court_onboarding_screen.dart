@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'court_repository.dart';
 
@@ -100,18 +101,18 @@ class _CourtOnboardingScreenState
             TextField(
               controller: _nameCtl,
               enabled: !_busy,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Court name',
-                prefixIcon: Icon(Icons.stadium_outlined),
+                prefixIcon: Icon(PhosphorIconsFill.buildings),
               ),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _addressCtl,
               enabled: !_busy,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Address (optional)',
-                prefixIcon: Icon(Icons.location_on_outlined),
+                prefixIcon: Icon(PhosphorIconsFill.mapPin),
               ),
             ),
             _SectionHeader('Pricing', theme),
@@ -121,9 +122,9 @@ class _CourtOnboardingScreenState
               enabled: !_busy,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Entry fee (PHP)',
-                prefixIcon: Icon(Icons.payments_outlined),
+                prefixIcon: Icon(PhosphorIconsFill.currencyDollar),
               ),
             ),
             const SizedBox(height: 14),
@@ -132,11 +133,11 @@ class _CourtOnboardingScreenState
               enabled: !_busy,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Private booking rate (PHP/hr)',
                 helperText:
                     'Enables "Book a Court" for players. Leave blank to disable.',
-                prefixIcon: Icon(Icons.lock_clock_outlined),
+                prefixIcon: Icon(PhosphorIconsFill.lock),
               ),
             ),
             _SectionHeader('Capacity', theme),
@@ -145,16 +146,16 @@ class _CourtOnboardingScreenState
               controller: _slotsCtl,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Number of courts',
-                prefixIcon: Icon(Icons.grid_view_outlined),
+                prefixIcon: Icon(PhosphorIconsFill.gridFour),
               ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(Icons.error_outline, size: 16, color: scheme.error),
+                  Icon(PhosphorIconsFill.warning, size: 16, color: scheme.error),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(_error!,

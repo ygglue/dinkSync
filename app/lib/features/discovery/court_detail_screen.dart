@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../app/app_icons.dart';
 import '../../data/court.dart';
 import 'discovery_repository.dart';
 
@@ -49,32 +51,32 @@ class _Body extends ConsumerWidget {
         Text(court.name, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
         _InfoRow(
-          icon: Icons.location_on_outlined,
+          icon: const Icon(PhosphorIconsFill.mapPin),
           text: court.address ?? 'Address not set',
         ),
         const SizedBox(height: 8),
         _InfoRow(
-          icon: Icons.payments_outlined,
+          icon: const Icon(PhosphorIconsFill.currencyDollar),
           text: 'Entry fee ${formatFee(court.entryFeeCents, court.currency)}',
         ),
         const SizedBox(height: 8),
         _InfoRow(
-          icon: Icons.grid_view_outlined,
+          icon: const Icon(PhosphorIconsFill.gridFour),
           text: '${court.numCourts} '
               '${court.numCourts == 1 ? 'court' : 'courts'}',
         ),
         const SizedBox(height: 8),
         availAsync.when(
-          loading: () => const _InfoRow(
-            icon: Icons.sports_tennis,
+          loading: () => _InfoRow(
+            icon: AppIcon(AppIcons.pickleballPaddle),
             text: 'Checking availability…',
           ),
-          error: (_, _) => const _InfoRow(
-            icon: Icons.sports_tennis,
+          error: (_, _) => _InfoRow(
+            icon: AppIcon(AppIcons.pickleballPaddle),
             text: 'Availability unavailable',
           ),
           data: (a) => _InfoRow(
-            icon: Icons.sports_tennis,
+            icon: AppIcon(AppIcons.pickleballPaddle),
             text: a.totalCount == 0
                 ? 'No courts in service'
                 : '${a.openCount} of ${a.totalCount} courts open',
@@ -93,7 +95,7 @@ class _Body extends ConsumerWidget {
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.icon, required this.text});
 
-  final IconData icon;
+  final Widget icon;
   final String text;
 
   @override
@@ -102,7 +104,10 @@ class _InfoRow extends StatelessWidget {
     final scheme = theme.colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 20, color: scheme.primary),
+        IconTheme(
+          data: IconThemeData(size: 20, color: scheme.primary),
+          child: icon,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
