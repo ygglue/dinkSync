@@ -124,9 +124,10 @@ class SupabasePlayerProfileRepository implements PlayerProfileRepository {
         .select()
         .ilike('display_name', '%$q%');
     if (me != null) builder = (builder as PostgrestFilterBuilder).neq('id', me);
-    final rows = await (builder as PostgrestFilterBuilder)
+    final dynamic rawRows = await (builder as PostgrestFilterBuilder)
         .order('display_name')
         .limit(20);
+    final rows = List<Map<String, dynamic>>.from(rawRows as List);
     return rows.map(PublicProfile.fromMap).toList();
   }
 }
