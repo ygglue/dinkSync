@@ -22,8 +22,8 @@ grant select on public.public_profiles to authenticated;
 create view public.public_player_stats as
   select
     p.id as profile_id,
-    count(*) filter (where mr.result = 'win')  as wins,
-    count(*) filter (where mr.result = 'loss') as losses
+    count(mr.match_id) filter (where mr.result = 'win')  as wins,
+    count(mr.match_id) filter (where mr.result = 'loss') as losses
   from public.profiles p
   left join public.match_results mr on mr.profile_id = p.id
   group by p.id;

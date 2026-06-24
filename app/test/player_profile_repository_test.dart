@@ -51,6 +51,16 @@ void main() {
       expect(s.total, 0);
       expect(s.winRate, isNull);
     });
+
+    test('all wins -> winRate is 1.0', () {
+      const s = PlayerStats(wins: 5, losses: 0);
+      expect(s.winRate, 1.0);
+    });
+
+    test('all losses -> winRate is 0.0, not null', () {
+      const s = PlayerStats(wins: 0, losses: 5);
+      expect(s.winRate, 0.0);
+    });
   });
 
   group('RecentMatch.fromMap', () {
@@ -67,6 +77,17 @@ void main() {
       expect(m.team, 1);
       expect(m.winningTeam, 1);
       expect(m.playedAt.toUtc().month, 2);
+    });
+
+    test('null winning_team is preserved', () {
+      final m = RecentMatch.fromMap(const {
+        'match_id': 'm2',
+        'played_at': '2026-03-04T10:00:00Z',
+        'result': 'loss',
+        'team': 2,
+        'winning_team': null,
+      });
+      expect(m.winningTeam, isNull);
     });
   });
 }
