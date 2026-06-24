@@ -1,6 +1,7 @@
-import 'dart:async' show StreamSubscription;
+﻿import 'dart:async' show StreamSubscription;
 
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,6 +20,7 @@ import '../features/discovery/discovery_repository.dart';
 import '../features/discovery/court_picker_screen.dart';
 import '../features/lobby/lobby_screen.dart';
 import '../features/owner/bookings_screen.dart';
+import '../features/profile/player_profile_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/schedule/schedule_screen.dart';
 import '../features/shell/launch_screen.dart';
@@ -62,7 +64,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               path: '/social',
               builder: (c, s) => const PlaceholderTab(
                 title: 'Social',
-                icon: Icons.groups,
+                icon: PhosphorIconsFill.usersThree,
                 message: 'Friends and activity are coming soon.',
               ),
             ),
@@ -121,6 +123,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/play/court/:id',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (c, s) => CourtDetailScreen(courtId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/play/player/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (c, s) => PlayerProfileScreen(profileId: s.pathParameters['id']!),
       ),
       GoRoute(
         path: '/play/courts',
