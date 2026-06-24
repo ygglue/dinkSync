@@ -1,7 +1,6 @@
 import 'dart:async' show StreamSubscription;
 
 import 'package:flutter/material.dart';
-import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,8 +24,8 @@ import '../features/profile/profile_screen.dart';
 import '../features/schedule/schedule_screen.dart';
 import '../features/shell/launch_screen.dart';
 import '../features/shell/manage_shell.dart';
-import '../features/shell/placeholder_tab.dart';
 import '../features/shell/play_shell.dart';
+import '../features/social/social_screen.dart';
 
 /// Where a signed-in user should land on launch, given their role + last mode.
 String launchTarget({required bool isManager, required AppMode mode}) {
@@ -62,11 +61,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/social',
-              builder: (c, s) => const PlaceholderTab(
-                title: 'Social',
-                icon: PhosphorIconsFill.usersThree,
-                message: 'Friends and activity are coming soon.',
-              ),
+              builder: (c, s) => const SocialScreen(),
             ),
           ]),
           StatefulShellBranch(routes: [

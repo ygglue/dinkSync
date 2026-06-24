@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart' show PhosphorIconsFill;
 
 import 'package:dinksync/data/court.dart';
 import 'package:dinksync/features/discovery/court_list_screen.dart';
@@ -115,13 +116,13 @@ void main() {
     await tester.pumpWidget(_pickerHost(_courts, (_) {}));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.info_outline), findsNWidgets(2));
+    expect(find.byIcon(PhosphorIconsFill.info), findsNWidgets(2));
   });
 
   testWidgets('normal mode: info button is NOT shown', (tester) async {
     await tester.pumpWidget(_host(_courts));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.info_outline), findsNothing);
+    expect(find.byIcon(PhosphorIconsFill.info), findsNothing);
   });
 }
