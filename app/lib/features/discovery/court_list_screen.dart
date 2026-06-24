@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../app/app_icons.dart';
 import '../../app/theme.dart';
 import '../../data/court.dart';
 import 'discovery_repository.dart';
@@ -28,9 +30,9 @@ class _CourtListScreenState extends ConsumerState<CourtListScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: TextField(
             onChanged: (v) => setState(() => _query = v),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Search courts by name',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(PhosphorIconsFill.magnifyingGlass),
             ),
           ),
         ),
@@ -105,9 +107,9 @@ class _CourtCard extends StatelessWidget {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(100),
                         onTap: () => context.push('/play/court/${court.id}'),
-                        child: const Padding(
-                          padding: EdgeInsets.all(6),
-                          child: Icon(Icons.info_outline,
+                        child: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: Icon(PhosphorIconsFill.info,
                               color: Colors.white, size: 18),
                         ),
                       ),
@@ -163,8 +165,8 @@ class _CourtImage extends StatelessWidget {
     final placeholder = Container(
       color: scheme.surfaceContainerHighest,
       alignment: Alignment.center,
-      child: Icon(
-        Icons.sports_tennis,
+      child: AppIcon(
+        AppIcons.pickleballPaddle,
         size: 48,
         color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
       ),

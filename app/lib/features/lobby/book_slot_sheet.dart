@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../data/court.dart';
 import 'booking_repository.dart';
@@ -310,7 +311,7 @@ class _BookSlotSheetState extends ConsumerState<BookSlotSheet> {
                         ),
                       ),
                     ),
-                    Icon(Icons.keyboard_arrow_down_rounded,
+                    Icon(PhosphorIconsFill.caretDown,
                         color: scheme.onSurfaceVariant),
                   ],
                 ),
@@ -370,7 +371,7 @@ class _BookSlotSheetState extends ConsumerState<BookSlotSheet> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.error_outline, size: 14, color: scheme.error),
+                  Icon(PhosphorIconsFill.warning, size: 14, color: scheme.error),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(_error!,
@@ -405,7 +406,7 @@ class _BookSlotSheetState extends ConsumerState<BookSlotSheet> {
                           )),
                         ],
                         const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward, size: 18),
+                        Icon(PhosphorIconsFill.arrowRight, size: 18),
                       ],
                     ),
             ),

@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../app/app_icons.dart';
 import '../../data/app_mode.dart';
 import 'floating_nav_bar.dart';
 import 'mode_dropdown.dart';
@@ -45,22 +47,22 @@ class PlayShell extends StatelessWidget {
                 i,
                 initialLocation: i == navigationShell.currentIndex,
               ),
-              destinations: const [
+              destinations: [
                 FloatingNavDestination(
-                  icon: Icon(Icons.sports_tennis_outlined),
-                  selectedIcon: Icon(Icons.sports_tennis),
+                  icon: AppIcon(AppIcons.pickleballPaddle),
+                  selectedIcon: AppIcon(AppIcons.pickleballPaddle),
                 ),
                 FloatingNavDestination(
-                  icon: Icon(Icons.groups_outlined),
-                  selectedIcon: Icon(Icons.groups),
+                  icon: Icon(PhosphorIconsFill.usersThree),
+                  selectedIcon: Icon(PhosphorIconsFill.usersThree),
                 ),
                 FloatingNavDestination(
-                  icon: Icon(Icons.calendar_month_outlined),
-                  selectedIcon: Icon(Icons.calendar_month),
+                  icon: Icon(PhosphorIconsFill.calendarBlank),
+                  selectedIcon: Icon(PhosphorIconsFill.calendarBlank),
                 ),
                 FloatingNavDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
+                  icon: Icon(PhosphorIconsFill.user),
+                  selectedIcon: Icon(PhosphorIconsFill.user),
                 ),
               ],
             ),

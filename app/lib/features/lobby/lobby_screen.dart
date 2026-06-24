@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../app/app_icons.dart';
 import '../../app/theme.dart';
 import '../../data/app_mode.dart';
 import '../../data/court.dart';
@@ -65,35 +67,54 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
           Material(
             color: scheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(kRadius),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(kRadius),
-              onTap: _pickCourt,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.stadium_outlined,
-                      color: selectedCourt != null
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        selectedCourt?.name ?? 'Select a court',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: selectedCourt != null
-                              ? scheme.onSurface
-                              : scheme.onSurfaceVariant,
-                        ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment.topLeft,
+                        radius: 3.0,
+                        colors: [
+                          scheme.primary.withValues(alpha: 0.18),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
-                    Icon(Icons.chevron_right,
-                        size: 20, color: scheme.onSurfaceVariant),
-                  ],
+                  ),
                 ),
-              ),
+                InkWell(
+                  onTap: _pickCourt,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    child: Row(
+                      children: [
+                        Icon(
+                          PhosphorIconsFill.buildings,
+                          color: selectedCourt != null
+                              ? scheme.primary
+                              : scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            selectedCourt?.name ?? 'Select a court',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: selectedCourt != null
+                                  ? scheme.onSurface
+                                  : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        Icon(PhosphorIconsFill.caretRight,
+                            size: 20, color: scheme.onSurfaceVariant),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -122,12 +143,12 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                   letterSpacing: 0.3,
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.sports_tennis, size: 20),
-                  SizedBox(width: 10),
-                  Text('Find Match'),
+                  AppIcon(AppIcons.pickleballPaddle, size: 20),
+                  const SizedBox(width: 10),
+                  const Text('Find Match'),
                 ],
               ),
             ),
@@ -178,14 +199,12 @@ class _PlayerSlot extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Background: network photo when available, tonal gradient otherwise.
+          // Background: network photo when available, tonal surface otherwise.
           if (profile.avatarUrl != null)
             Image.network(profile.avatarUrl!, fit: BoxFit.cover)
           else
             Container(
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest,
-              ),
+              color: scheme.surfaceContainerHighest,
               child: Center(
                 child: Text(
                   initial,
@@ -198,7 +217,7 @@ class _PlayerSlot extends StatelessWidget {
                 ),
               ),
             ),
-          // Dark gradient — covers bottom ~45% for text legibility.
+          // Dark gradient for text legibility.
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -235,24 +254,24 @@ class _PlayerSlot extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 6),
-                  // MMR badge — dark pill with white text.
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(100),
+                      color: const Color(0xFF232821),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: scheme.primary, width: 1),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.bar_chart_rounded,
-                            size: 14, color: Colors.white),
+                        Icon(PhosphorIconsFill.chartBar,
+                            size: 14, color: scheme.primary),
                         const SizedBox(width: 4),
                         Text(
                           '${profile.mmr} MMR',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.white,
+                            color: scheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -297,7 +316,7 @@ class _PartnerSlot extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.person_add_outlined,
+              PhosphorIconsFill.userPlus,
               size: 48,
               color: scheme.onSurfaceVariant.withValues(alpha: 0.45),
             ),
@@ -311,13 +330,14 @@ class _PartnerSlot extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                border: Border.all(color: scheme.outlineVariant),
-                borderRadius: BorderRadius.circular(100),
+                color: const Color(0xFF232821),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: scheme.primary, width: 1),
               ),
               child: Text(
                 'COMING SOON',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  color: scheme.primary,
                   letterSpacing: 0.5,
                 ),
               ),

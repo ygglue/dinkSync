@@ -38,11 +38,17 @@ class AppTheme {
 
   /// Shared component theming so light + dark stay in lockstep.
   static ThemeData _build(Brightness brightness) {
+    final isLight = brightness == Brightness.light;
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: _seed,
         brightness: brightness,
+        // Pin surfaces to neutral so the green seed doesn't tint backgrounds.
+        surface: isLight ? const Color(0xFFF9FAFB) : const Color(0xFF131313),
+        surfaceContainerLow: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1C1B1B),
+        surfaceContainerHigh: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF2A2A2A),
+        surfaceContainerHighest: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF353534),
       ),
     );
     final scheme = base.colorScheme;

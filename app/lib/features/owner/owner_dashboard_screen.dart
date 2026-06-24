@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'court_repository.dart';
 
@@ -35,7 +36,7 @@ class OwnerDashboard extends StatelessWidget {
               IconButton(
                 key: const Key('edit-court-button'),
                 onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined),
+                icon: Icon(PhosphorIconsFill.pencilSimple),
                 tooltip: 'Edit court',
               ),
           ],
@@ -71,20 +72,20 @@ class OwnerDashboard extends StatelessWidget {
             ),
           ),
         if (!court.isActive) const SizedBox(height: 20),
-        const _MetricCard(
-          icon: Icons.payments_outlined,
+        _MetricCard(
+          icon: PhosphorIconsFill.currencyDollar,
           title: "Today's revenue",
           empty: 'No revenue yet',
         ),
         const SizedBox(height: 12),
-        const _MetricCard(
-          icon: Icons.groups_outlined,
+        _MetricCard(
+          icon: PhosphorIconsFill.usersThree,
           title: 'Players today',
           empty: 'No players yet',
         ),
         const SizedBox(height: 12),
-        const _MetricCard(
-          icon: Icons.timer_outlined,
+        _MetricCard(
+          icon: PhosphorIconsFill.timer,
           title: 'Active queue',
           empty: 'Queue is empty',
         ),

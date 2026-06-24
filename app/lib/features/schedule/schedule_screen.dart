@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../app/theme.dart';
 import '../lobby/book_slot_sheet.dart' show BookSlotSheet;
 import '../lobby/booking_repository.dart';
 
@@ -90,7 +92,7 @@ class ScheduleScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.calendar_today_outlined,
+                          Icon(PhosphorIconsFill.calendarBlank,
                               size: 56,
                               color: scheme.onSurfaceVariant
                                   .withValues(alpha: 0.4)),
@@ -127,60 +129,314 @@ class ScheduleScreen extends ConsumerWidget {
                   ? BookSlotSheet.feeLabel(b.amountCents!, b.currency!)
                   : null;
 
-              return Card(
-                margin: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (b.courtName != null)
-                              Text(
-                                [
-                                  b.courtName!,
-                                  if (b.slotLabel != null) b.slotLabel!
-                                ].join(' · '),
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: scheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _dateLabel(b.startsAt),
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            Text(
-                              '${BookSlotSheet.timeLabel(startMins)} – ${BookSlotSheet.timeLabel(endMins)}'
-                              ' · ${durationH}h'
-                              '${fee != null ? ' · $fee' : ''}',
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => _cancel(context, ref, b),
-                        style:
-                            TextButton.styleFrom(foregroundColor: scheme.error),
-                        child: const Text('Cancel'),
-                      ),
-                    ],
-                  ),
-                ),
+              return _BookingCard(
+                booking: b,
+                dateLabel: _dateLabel(b.startsAt),
+                startMins: startMins,
+                endMins: endMins,
+                durationH: durationH,
+                fee: fee,
+                onCancel: () => _cancel(context, ref, b),
               );
             },
           );
         },
       ),
       ),
+    );
+  }
+}
+
+// ── Booking card ──────────────────────────────────────────────────────────────
+
+class _BookingCard extends StatelessWidget {
+  const _BookingCard({
+    required this.booking,
+    required this.dateLabel,
+    required this.startMins,
+    required this.endMins,
+    required this.durationH,
+    this.fee,
+    required this.onCancel,
+  });
+
+  final CustomBooking booking;
+  final String dateLabel;
+  final int startMins;
+  final int endMins;
+  final int durationH;
+  final String? fee;
+  final VoidCallback onCancel;
+
+  static BoxDecoration _pillDecoration(ColorScheme scheme) => BoxDecoration(
+        color: const Color(0xFF232821),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: scheme.primary, width: 1),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final b = booking;
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(kRadius),
+      ),
+      child: Stack(
+        children: [
+          // ── Radial glow from upper-left ──
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topLeft,
+                  radius: 1.4,
+                  colors: [
+                    scheme.primary.withValues(alpha: 0.22),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ── Card content ──
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Header: name/slot + cancel pill ──
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (b.courtName != null)
+                            Text(
+                              b.courtName!,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          if (b.slotLabel != null)
+                            Text(
+                              b.slotLabel!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: onCancel,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: scheme.error.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+                Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                const SizedBox(height: 12),
+
+                // ── Date pill ──
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: _pillDecoration(scheme),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(PhosphorIconsFill.calendarBlank,
+                              size: 13, color: scheme.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            dateLabel,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // ── Inner time card with gradient ──
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                      colors: [Color(0xFFCFE8C4), Color(0xFFF8F3EA)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: _TimelineRow(
+                    startLabel: BookSlotSheet.timeLabel(startMins),
+                    endLabel: BookSlotSheet.timeLabel(endMins),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // ── Footer: duration pill + fee pill ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: _pillDecoration(scheme),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(PhosphorIconsFill.clock,
+                              size: 15, color: scheme.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${durationH}h',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (fee != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: _pillDecoration(scheme),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(PhosphorIconsFill.receipt,
+                                size: 15, color: scheme.primary),
+                            const SizedBox(width: 6),
+                            Text(
+                              fee!,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({required this.startLabel, required this.endLabel});
+
+  final String startLabel;
+  final String endLabel;
+
+  static String _time(String label) => label.split(' ').first;
+  static String _ampm(String label) {
+    final parts = label.split(' ');
+    return parts.length > 1 ? parts.last : '';
+  }
+
+  Widget _timeWidget(String label) => Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(
+            _time(label),
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 3),
+            child: Text(
+              _ampm(label),
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+          ),
+        ],
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    const green = Color(0xFF2E7D32);
+    const dotSize = 7.0;
+
+    return Row(
+      children: [
+        _timeWidget(startLabel),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                width: dotSize,
+                height: dotSize,
+                decoration: const BoxDecoration(
+                    color: green, shape: BoxShape.circle),
+              ),
+              Expanded(child: Container(height: 1.5, color: green)),
+              Container(
+                width: dotSize,
+                height: dotSize,
+                decoration: const BoxDecoration(
+                    color: green, shape: BoxShape.circle),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        _timeWidget(endLabel),
+      ],
     );
   }
 }

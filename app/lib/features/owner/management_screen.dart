@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'court_repository.dart';
 import 'owner_dashboard_screen.dart';
@@ -47,7 +48,7 @@ class _NoCourt extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.storefront_outlined,
+            Icon(PhosphorIconsFill.storefront,
                 size: 48, color: theme.colorScheme.primary),
             const SizedBox(height: 12),
             Text('No court yet', style: theme.textTheme.titleLarge),

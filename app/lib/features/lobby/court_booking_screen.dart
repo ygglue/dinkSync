@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../data/court.dart';
 import 'booking_repository.dart';
@@ -331,7 +332,7 @@ class _HourBlock extends StatelessWidget {
                 ),
               ),
             if (isSelected && !isBooked)
-              Icon(Icons.check_circle_outline,
+              Icon(PhosphorIconsFill.checkCircle,
                   size: 16, color: scheme.primary.withValues(alpha: 0.7)),
           ],
         ),

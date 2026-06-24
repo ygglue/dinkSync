@@ -1,8 +1,10 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
+﻿import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException, AuthResponse;
 
+import '../../app/app_icons.dart';
 import '../../app/theme.dart';
 import 'auth_repository.dart';
 import 'dev_accounts.dart';
@@ -121,7 +123,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       color: theme.colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(kRadius),
                     ),
-                    child: Icon(Icons.sports_tennis,
+                    child: AppIcon(AppIcons.pickleballPaddle,
                         size: 34, color: theme.colorScheme.primary),
                   ),
                 ),
@@ -159,9 +161,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   enabled: !_busy,
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const ['email'],
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Email address',
-                    prefixIcon: Icon(Icons.mail_outline),
+                    prefixIcon: Icon(PhosphorIconsFill.envelope),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -172,10 +174,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   obscureText: _obscure,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: Icon(PhosphorIconsFill.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(
-                          _obscure ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(_obscure
+                          ? PhosphorIconsFill.eye
+                          : PhosphorIconsFill.eyeSlash),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
@@ -480,9 +483,9 @@ class _PasswordResetSheetState extends State<_PasswordResetSheet> {
               controller: _emailCtl,
               enabled: !_busy,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Email',
-                prefixIcon: Icon(Icons.mail_outline),
+                prefixIcon: Icon(PhosphorIconsFill.envelope),
               ),
             )
           else ...[
@@ -490,9 +493,9 @@ class _PasswordResetSheetState extends State<_PasswordResetSheet> {
               controller: _codeCtl,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: '6-digit code',
-                prefixIcon: Icon(Icons.password),
+                prefixIcon: Icon(PhosphorIconsFill.key),
               ),
             ),
             const SizedBox(height: 12),
@@ -500,9 +503,9 @@ class _PasswordResetSheetState extends State<_PasswordResetSheet> {
               controller: _newPwCtl,
               enabled: !_busy,
               obscureText: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'New password',
-                prefixIcon: Icon(Icons.lock_outline),
+                prefixIcon: Icon(PhosphorIconsFill.lock),
               ),
             ),
           ],
