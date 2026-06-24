@@ -26,8 +26,13 @@ dependencies:
   # Typography (Plus Jakarta Sans headlines + Inter body — design system)
   google_fonts: ^6.2.1
 
+  # Icon set — Phosphor Icons (replaces Material Icons.*).
+
   # Local persistence (remembers Play/Management mode)
   shared_preferences: ^2.3.2
+  phosphoricons_flutter: ^1.0.0
+  flutter_svg: ^2.3.0
+  image_picker: ^1.2.2
 
 dev_dependencies:
   flutter_test:
@@ -38,3 +43,4 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/icons/
