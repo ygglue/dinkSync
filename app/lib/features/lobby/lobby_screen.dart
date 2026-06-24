@@ -10,6 +10,7 @@ import '../../data/court.dart';
 import '../discovery/discovery_repository.dart';
 import 'book_slot_sheet.dart';
 import 'booking_repository.dart';
+import 'matchmaking_repository.dart';
 
 const _kLastCourtKey = 'lobby_last_court_id';
 
@@ -41,6 +42,22 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     }
   }
 
+  void _showMatchFoundSheet(BuildContext context, MatchmakingMatched state) {
+    showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _MatchFoundSheet(
+        state: state,
+        onDismiss: () {
+          ref.read(matchmakingProvider.notifier).acknowledgeMatch();
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -48,6 +65,14 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     final profileAsync = ref.watch(currentUserProfileProvider);
     final profile = profileAsync.valueOrNull ??
         const LobbyProfile(displayName: 'Player', mmr: 1000);
+    final matchState = ref.watch(matchmakingProvider);
+
+    // Trigger match-found sheet as a side effect
+    ref.listen<MatchmakingState>(matchmakingProvider, (prev, next) {
+      if (next is MatchmakingMatched && mounted) {
+        _showMatchFoundSheet(context, next);
+      }
+    });
 
     // Always watch live data so edits in Manage mode are reflected instantly.
     final selectedCourt = _selectedCourtId != null
@@ -56,6 +81,13 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
 
     final canBook =
         selectedCourt != null && selectedCourt.customFeeCents != null;
+    final canMatch = selectedCourt != null && matchState is MatchmakingIdle;
+    final isSearching = matchState is MatchmakingSearching;
+
+    // Live queue depth while searching
+    final queueDepth = isSearching
+        ? ref.watch(queueDepthProvider(matchState.courtId)).valueOrNull
+        : null;
 
     final bottomInset = MediaQuery.of(context).padding.bottom;
     return Padding(
@@ -85,7 +117,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                   ),
                 ),
                 InkWell(
-                  onTap: _pickCourt,
+                  onTap: isSearching ? null : _pickCourt,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 14),
@@ -130,35 +162,49 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // Find Match — primary CTA.
-          SizedBox(
-            height: 80,
-            child: FilledButton(
-              onPressed: null,
-              style: FilledButton.styleFrom(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                textStyle: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
+          // Find Match — primary CTA (switches to searching state).
+          if (isSearching)
+            _SearchingCard(
+              queueDepth: queueDepth,
+              onCancel: () =>
+                  ref.read(matchmakingProvider.notifier).cancelQueue(),
+            )
+          else
+            SizedBox(
+              height: 80,
+              child: FilledButton(
+                onPressed: canMatch
+                    ? () => ref
+                        .read(matchmakingProvider.notifier)
+                        .joinQueue(
+                          courtId: selectedCourt.id,
+                          mmr: profile.mmr,
+                        )
+                    : null,
+                style: FilledButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AppIcon(AppIcons.pickleballPaddle, size: 20),
+                    const SizedBox(width: 10),
+                    const Text('Find Match'),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AppIcon(AppIcons.pickleballPaddle, size: 20),
-                  const SizedBox(width: 10),
-                  const Text('Find Match'),
-                ],
-              ),
             ),
-          ),
           const SizedBox(height: 10),
           // Book a Slot — secondary CTA.
           SizedBox(
             height: 60,
             child: OutlinedButton(
-              onPressed: canBook
+              onPressed: (!isSearching && canBook)
                   ? () async {
                       final messenger = ScaffoldMessenger.of(context);
                       final label =
@@ -401,4 +447,215 @@ class _DashedRoundedBorder extends CustomPainter {
       strokeWidth != old.strokeWidth ||
       dashLength != old.dashLength ||
       gapLength != old.gapLength;
+}
+
+// ── Searching state card ───────────────────────────────────────────────────────
+
+class _SearchingCard extends StatelessWidget {
+  const _SearchingCard({this.queueDepth, required this.onCancel});
+
+  final int? queueDepth;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      height: 80,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(kRadius),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topLeft,
+                  radius: 2.0,
+                  colors: [
+                    scheme.primary.withValues(alpha: 0.20),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: scheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Searching for match…',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      if (queueDepth != null)
+                        Text(
+                          '$queueDepth in queue',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: onCancel,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: scheme.error.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: scheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Match-found bottom sheet ───────────────────────────────────────────────────
+
+class _MatchFoundSheet extends StatelessWidget {
+  const _MatchFoundSheet({required this.state, required this.onDismiss});
+
+  final MatchmakingMatched state;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(kRadius),
+      ),
+      child: Stack(
+        children: [
+          // Radial glow — stronger for this celebratory moment
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topLeft,
+                  radius: 1.6,
+                  colors: [
+                    scheme.primary.withValues(alpha: 0.28),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(24, 28, 24, 24 + bottomInset),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(PhosphorIconsFill.trophy,
+                        size: 28, color: scheme.primary),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Match Found!',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (state.slotLabel != null) ...[
+                  Text(
+                    "You're on",
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF232821),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: scheme.primary, width: 1),
+                    ),
+                    child: Text(
+                      state.slotLabel!,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ] else
+                  Text(
+                    'Your group is formed — heading to queue.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  '${state.memberIds.length} players ready',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: onDismiss,
+                  child: const Text("Let's Play!"),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
