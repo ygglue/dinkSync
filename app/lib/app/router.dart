@@ -1,4 +1,4 @@
-﻿import 'dart:async' show StreamSubscription;
+import 'dart:async' show StreamSubscription;
 
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
